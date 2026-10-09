@@ -1,0 +1,570 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prowler Warden Status</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&family=Inter:wght@400;500;600;700&display=swap"><style>
+:root{--bg:#000;--card:#0c0a09;--line:#27272a;--fg:#fff;--mut:#a1a1aa;--acc:#6ee7b7;--ok:#4ade80;--warn:#fb923c;--bad:#f43f5e;--font:Inter,-apple-system,"Segoe UI",sans-serif;--mono:"Fira Code",ui-monospace,Menlo,monospace;color-scheme:dark}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#fdfdfd;--card:#fff;--line:#e5e5e5;--fg:#020617;--mut:#6b7280;--acc:#047857;--ok:#15803d;--warn:#c2410c;--bad:#be123c;color-scheme:light}}
+:root[data-theme="light"]{--bg:#fdfdfd;--card:#fff;--line:#e5e5e5;--fg:#020617;--mut:#6b7280;--acc:#047857;--ok:#15803d;--warn:#c2410c;--bad:#be123c;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--font)}
+main{max-width:960px;margin:0 auto;padding-block:32px 64px;padding-inline:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin-top:16px;min-width:0}
+h1{font-size:26px;margin:4px 0 2px;letter-spacing:-.01em;text-wrap:balance}h2{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px;font-weight:600}
+.m{color:var(--mut);font-size:13px}.hero{display:flex;gap:28px;align-items:center;flex-wrap:wrap}.big{font-size:64px;font-weight:700;line-height:1;color:var(--bad);font-variant-numeric:tabular-nums}
+.chip{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--line)}.chip.ok{color:var(--ok)}.chip.critical{color:var(--bad)}.chip.high{color:var(--warn)}.chip.medium{color:var(--mut)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:500;font-size:12px}
+ul{list-style:none;padding:0;margin:0}li{padding:7px 0;border-bottom:1px solid var(--line)}a{color:var(--acc)}a:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px}.step b{display:block;font-size:12px;color:var(--mut);font-weight:600}.step span{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+pre{white-space:pre-wrap;word-break:break-all;font:12px/1.5 var(--mono);color:var(--mut);max-height:260px;overflow:auto;margin:0}details summary{cursor:pointer;color:var(--acc)}.hash{font:13px var(--mono);word-break:break-all;margin:6px 0 10px}
+</style></head><body><main>
+<div class="m">Prowler Warden · continuous compliance</div><h1>CIS Amazon Web Services Foundations Benchmark v5.0.0</h1>
+<div class="m">AWS account ••••••••7653 · us-east-1 · updated 2026-10-09 21:02:58+00:00 UTC</div>
+<div class="card hero"><div class="big">28.8%</div><div><div><b>15</b> of <b>52</b> graded requirements passing</div>
+<div class="m">37 failing · 11 without results · 58 of 70 automated checks evaluated</div>
+<div class="m">Source: Prowler OSS scans plus AWS CloudTrail. Requirements without results are not graded.</div></div></div>
+<div class="card"><h2>What Warden did</h2><ul><li><span class="chip ok">AWS fix</span> Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH) <span class="m">· fixed-verified · 2026-10-09 19:31 UTC</span></li><li><span class="chip ok">AWS fix</span> Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH) <span class="m">· reverted · 2026-10-09 19:29 UTC</span></li><li><span class="chip ok">AWS fix</span> Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH) <span class="m">· fixed-verified · 2026-10-09 19:27 UTC</span></li></ul></div>
+<div class="card"><h2>Where fixes can take this</h2><div class="steps"><div class="step"><b>Today</b><span>28.8%</span></div><div class="step"><b>+ self-fix</b><span>34.6%</span></div><div class="step"><b>+ PRs to code</b><span>84.6%</span></div><div class="step"><b>+ human tasks</b><span>100.0%</span></div></div><div class="m" style="margin-top:8px">Projection from the current failing checks: self-fix, then pull requests to code, then tasks that need a person.</div></div>
+<div class="card"><h2>Open findings (37 requirements)</h2><div class="tw"><table><thead><tr><th>Req</th><th>Finding</th><th>Severity</th><th>Check</th></tr></thead><tbody><tr><td><b>1.11</b></td><td>IAM user does not have unused access keys older than 45 days<div class="m">Ensure credentials unused for 45 days or more are disabled</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/iam_user_accesskey_unused" rel="noopener">iam_user_accesskey_unused</a></td></tr><tr><td><b>1.13</b></td><td>IAM user does not have active access keys older than 90 days<div class="m">Ensure access keys are rotated every 90 days or less</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/iam_rotate_access_key_90_days" rel="noopener">iam_rotate_access_key_90_days</a></td></tr><tr><td><b>1.14</b></td><td>IAM user has no inline or attached policies<div class="m">Ensure IAM users receive permissions only through groups</div></td><td><span class="chip low">low</span></td><td><a href="https://hub.prowler.com/check/iam_policy_attached_only_to_group_or_roles" rel="noopener">iam_policy_attached_only_to_group_or_roles</a></td></tr><tr><td><b>1.15</b></td><td>Attached AWS-managed IAM policy does not allow &#x27;*:*&#x27; administrative privileges<div class="m">Ensure IAM policies that allow full *:* administrative privileges are not attached</div></td><td><span class="chip critical">critical</span></td><td><a href="https://hub.prowler.com/check/iam_aws_attached_policy_no_administrative_privileges" rel="noopener">iam_aws_attached_policy_no_administrative_privileges</a></td></tr><tr><td><b>1.17</b></td><td>EC2 instance is associated with an IAM instance profile role<div class="m">Ensure IAM instance roles are used for AWS resource access from instances</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/ec2_instance_profile_attached" rel="noopener">ec2_instance_profile_attached</a></td></tr><tr><td><b>1.4</b></td><td>Root account has MFA enabled<div class="m">Ensure MFA is enabled for the &#x27;root&#x27; user account</div></td><td><span class="chip critical">critical</span></td><td><a href="https://hub.prowler.com/check/iam_root_mfa_enabled" rel="noopener">iam_root_mfa_enabled</a></td></tr><tr><td><b>1.5</b></td><td>Root account has a hardware MFA device enabled<div class="m">Ensure hardware MFA is enabled for the &#x27;root&#x27; user account</div></td><td><span class="chip critical">critical</span></td><td><a href="https://hub.prowler.com/check/iam_root_hardware_mfa_enabled" rel="noopener">iam_root_hardware_mfa_enabled</a></td></tr><tr><td><b>1.8</b></td><td>IAM password policy prevents reuse of the last 24 passwords<div class="m">Ensure IAM password policy prevents password reuse</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/iam_password_policy_reuse_24" rel="noopener">iam_password_policy_reuse_24</a></td></tr><tr><td><b>2.1.1</b></td><td>S3 bucket policy denies requests over insecure transport<div class="m">Ensure S3 Bucket Policy is set to deny HTTP requests</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/s3_bucket_secure_transport_policy" rel="noopener">s3_bucket_secure_transport_policy</a></td></tr><tr><td><b>2.1.2</b></td><td>S3 bucket has MFA Delete enabled<div class="m">Ensure MFA Delete is enabled on S3 buckets</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/s3_bucket_no_mfa_delete" rel="noopener">s3_bucket_no_mfa_delete</a></td></tr><tr><td><b>2.1.3</b></td><td>Amazon Macie is enabled<div class="m">Ensure all data in Amazon S3 has been discovered, classified, and secured when necessary</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/macie_is_enabled" rel="noopener">macie_is_enabled</a></td></tr><tr><td><b>2.1.4</b></td><td>S3 bucket has Block Public Access with IgnorePublicAcls and RestrictPublicBuckets enabled at bucket or account level<div class="m">Ensure that S3 is configured with &#x27;Block Public Access&#x27; enabled</div></td><td><span class="chip high">high</span></td><td><a href="https://hub.prowler.com/check/s3_bucket_level_public_access_block" rel="noopener">s3_bucket_level_public_access_block</a></td></tr><tr><td><b>2.1.4</b></td><td>S3 account-level Block Public Access ignores public ACLs and restricts public buckets<div class="m">Ensure that S3 is configured with &#x27;Block Public Access&#x27; enabled</div></td><td><span class="chip high">high</span></td><td><a href="https://hub.prowler.com/check/s3_account_level_public_access_blocks" rel="noopener">s3_account_level_public_access_blocks</a></td></tr><tr><td><b>3.3</b></td><td>AWS Config recorder is enabled and not in failure state or disabled<div class="m">Ensure AWS Config is enabled in all regions</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/config_recorder_all_regions_enabled" rel="noopener">config_recorder_all_regions_enabled</a></td></tr><tr><td><b>3.5</b></td><td>CloudTrail trail logs are encrypted at rest with a KMS key<div class="m">Ensure CloudTrail logs are encrypted at rest using KMS CMKs</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudtrail_kms_encryption_enabled" rel="noopener">cloudtrail_kms_encryption_enabled</a></td></tr><tr><td><b>3.7</b></td><td>VPC flow logs are enabled<div class="m">Ensure VPC flow logging is enabled in all VPCs</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/vpc_flow_logs_enabled" rel="noopener">vpc_flow_logs_enabled</a></td></tr><tr><td><b>3.8</b></td><td>CloudTrail trail records all S3 object-level API operations for all buckets<div class="m">Ensure that object-level logging for write events is enabled for S3 buckets</div></td><td><span class="chip low">low</span></td><td><a href="https://hub.prowler.com/check/cloudtrail_s3_dataevents_write_enabled" rel="noopener">cloudtrail_s3_dataevents_write_enabled</a></td></tr><tr><td><b>3.9</b></td><td>CloudTrail trail records S3 object-level read events for all S3 buckets<div class="m">Ensure that object-level logging for read events is enabled for S3 buckets</div></td><td><span class="chip low">low</span></td><td><a href="https://hub.prowler.com/check/cloudtrail_s3_dataevents_read_enabled" rel="noopener">cloudtrail_s3_dataevents_read_enabled</a></td></tr><tr><td><b>4.1</b></td><td>CloudWatch Logs metric filter and alarm exist for unauthorized API calls<div class="m">Ensure unauthorized API calls are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_unauthorized_api_calls" rel="noopener">cloudwatch_log_metric_filter_unauthorized_api_calls</a></td></tr><tr><td><b>4.10</b></td><td>CloudWatch Logs metric filter and alarm exist for security group changes<div class="m">Ensure security group changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_security_group_changes" rel="noopener">cloudwatch_log_metric_filter_security_group_changes</a></td></tr><tr><td><b>4.11</b></td><td>CloudWatch log metric filter and alarm exist for Network ACL (NACL) change events<div class="m">Ensure Network Access Control List (NACL) changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_changes_to_network_acls_alarm_configured" rel="noopener">cloudwatch_changes_to_network_acls_alarm_configured</a></td></tr><tr><td><b>4.12</b></td><td>CloudWatch Logs metric filter and alarm exist for changes to network gateways<div class="m">Ensure changes to network gateways are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_changes_to_network_gateways_alarm_configured" rel="noopener">cloudwatch_changes_to_network_gateways_alarm_configured</a></td></tr><tr><td><b>4.13</b></td><td>Account monitors VPC route table changes with a CloudWatch Logs metric filter and alarm<div class="m">Ensure route table changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_changes_to_network_route_tables_alarm_configured" rel="noopener">cloudwatch_changes_to_network_route_tables_alarm_configured</a></td></tr><tr><td><b>4.14</b></td><td>AWS account has a CloudWatch Logs metric filter and alarm for VPC changes<div class="m">Ensure VPC changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_changes_to_vpcs_alarm_configured" rel="noopener">cloudwatch_changes_to_vpcs_alarm_configured</a></td></tr><tr><td><b>4.15</b></td><td>CloudWatch Logs metric filter and alarm exist for AWS Organizations changes<div class="m">Ensure AWS Organizations changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_aws_organizations_changes" rel="noopener">cloudwatch_log_metric_filter_aws_organizations_changes</a></td></tr><tr><td><b>4.2</b></td><td>CloudWatch log metric filter and alarm exist for Management Console sign-in without MFA<div class="m">Ensure management console sign-in without MFA is monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_sign_in_without_mfa" rel="noopener">cloudwatch_log_metric_filter_sign_in_without_mfa</a></td></tr><tr><td><b>4.3</b></td><td>Account has a CloudWatch Logs metric filter and alarm for root account usage<div class="m">Ensure usage of the &#x27;root&#x27; account is monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_root_usage" rel="noopener">cloudwatch_log_metric_filter_root_usage</a></td></tr><tr><td><b>4.4</b></td><td>CloudWatch Logs metric filter and alarm exist for IAM policy changes<div class="m">Ensure IAM policy changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_policy_changes" rel="noopener">cloudwatch_log_metric_filter_policy_changes</a></td></tr><tr><td><b>4.5</b></td><td>CloudWatch Logs metric filter and alarm exist for CloudTrail configuration changes<div class="m">Ensure CloudTrail configuration changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled" rel="noopener">cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled</a></td></tr><tr><td><b>4.6</b></td><td>Account has a CloudWatch Logs metric filter and alarm for AWS Management Console authentication failures<div class="m">Ensure AWS Management Console authentication failures are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_authentication_failures" rel="noopener">cloudwatch_log_metric_filter_authentication_failures</a></td></tr><tr><td><b>4.7</b></td><td>Account has a CloudWatch log metric filter and alarm for disabling or scheduled deletion of customer-managed KMS keys<div class="m">Ensure disabling or scheduled deletion of customer created CMKs is monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk" rel="noopener">cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk</a></td></tr><tr><td><b>4.8</b></td><td>CloudWatch log metric filter and alarm exist for S3 bucket policy changes<div class="m">Ensure S3 bucket policy changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_for_s3_bucket_policy_changes" rel="noopener">cloudwatch_log_metric_filter_for_s3_bucket_policy_changes</a></td></tr><tr><td><b>4.9</b></td><td>CloudWatch Logs metric filter and alarm exist for AWS Config configuration changes<div class="m">Ensure AWS Config configuration changes are monitored</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled" rel="noopener">cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled</a></td></tr><tr><td><b>5.1.1</b></td><td>EBS volume is encrypted<div class="m">Ensure EBS volume encryption is enabled in all regions</div></td><td><span class="chip high">high</span></td><td><a href="https://hub.prowler.com/check/ec2_ebs_volume_encryption" rel="noopener">ec2_ebs_volume_encryption</a></td></tr><tr><td><b>5.2</b></td><td>Network ACL does not allow ingress from 0.0.0.0/0 to any port<div class="m">Ensure no Network ACLs allow ingress from 0.0.0.0/0 to remote server administration ports</div></td><td><span class="chip high">high</span></td><td><a href="https://hub.prowler.com/check/ec2_networkacl_allow_ingress_any_port" rel="noopener">ec2_networkacl_allow_ingress_any_port</a></td></tr><tr><td><b>5.2</b></td><td>Network ACL does not allow ingress from the Internet to TCP port 22 (SSH)<div class="m">Ensure no Network ACLs allow ingress from 0.0.0.0/0 to remote server administration ports</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/ec2_networkacl_allow_ingress_tcp_port_22" rel="noopener">ec2_networkacl_allow_ingress_tcp_port_22</a></td></tr><tr><td><b>5.2</b></td><td>Network ACL does not allow ingress from the Internet to TCP port 3389 (RDP)<div class="m">Ensure no Network ACLs allow ingress from 0.0.0.0/0 to remote server administration ports</div></td><td><span class="chip medium">medium</span></td><td><a href="https://hub.prowler.com/check/ec2_networkacl_allow_ingress_tcp_port_3389" rel="noopener">ec2_networkacl_allow_ingress_tcp_port_3389</a></td></tr><tr><td><b>5.3</b></td><td>Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)<div class="m">Ensure no security groups allow ingress from 0.0.0.0/0 to remote server administration ports</div></td><td><span class="chip high">high</span></td><td><a href="https://hub.prowler.com/check/ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22" rel="noopener">ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22</a></td></tr><tr><td><b>5.4</b></td><td>Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)<div class="m">Ensure no security groups allow ingress from ::/0 to remote server administration ports</div></td><td><span class="chip high">high</span></td><td><a href="https://hub.prowler.com/check/ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22" rel="noopener">ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22</a></td></tr><tr><td><b>5.5</b></td><td>VPC default security group has no inbound or outbound rules<div class="m">Ensure the default security group of every VPC restricts all traffic</div></td><td><span class="chip high">high</span></td><td><a href="https://hub.prowler.com/check/ec2_securitygroup_default_restrict_traffic" rel="noopener">ec2_securitygroup_default_restrict_traffic</a></td></tr></tbody></table></div></div>
+<div class="card"><h2>Integrity</h2><div class="m">SHA-256 of the evidence bundle (canonical JSON, hash field excluded):</div><div class="hash">b3ea4a12be61561a52fee4a6221049d4e20f9ac5ed61c378feae487684e3c40e</div>
+<details><summary>Show the evidence bundle</summary><pre>{
+ &quot;generated_at&quot;: &quot;2026-10-09T21:02:58+00:00&quot;,
+ &quot;framework&quot;: {
+  &quot;id&quot;: &quot;cis_5.0_aws&quot;,
+  &quot;name&quot;: &quot;CIS Amazon Web Services Foundations Benchmark v5.0.0&quot;,
+  &quot;version&quot;: &quot;5.0&quot;
+ },
+ &quot;account&quot;: &quot;\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20227653&quot;,
+ &quot;region&quot;: &quot;us-east-1&quot;,
+ &quot;score&quot;: {
+  &quot;pass&quot;: 15,
+  &quot;fail&quot;: 37,
+  &quot;graded&quot;: 52,
+  &quot;manual&quot;: 0,
+  &quot;no_data&quot;: 11,
+  &quot;pct&quot;: 28.8
+ },
+ &quot;coverage&quot;: {
+  &quot;total&quot;: 70,
+  &quot;scanned&quot;: 58
+ },
+ &quot;projection&quot;: [
+  {
+   &quot;step&quot;: &quot;Today&quot;,
+   &quot;pct&quot;: 28.8
+  },
+  {
+   &quot;step&quot;: &quot;+ self-fix&quot;,
+   &quot;pct&quot;: 34.6
+  },
+  {
+   &quot;step&quot;: &quot;+ PRs to code&quot;,
+   &quot;pct&quot;: 84.6
+  },
+  {
+   &quot;step&quot;: &quot;+ human tasks&quot;,
+   &quot;pct&quot;: 100.0
+  }
+ ],
+ &quot;actions&quot;: [
+  {
+   &quot;time&quot;: &quot;2026-10-09T19:31:31Z&quot;,
+   &quot;kind&quot;: &quot;self-fix&quot;,
+   &quot;status&quot;: &quot;fixed-verified&quot;,
+   &quot;check&quot;: &quot;ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22&quot;,
+   &quot;title&quot;: &quot;Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)&quot;
+  },
+  {
+   &quot;time&quot;: &quot;2026-10-09T19:29:10Z&quot;,
+   &quot;kind&quot;: &quot;self-fix&quot;,
+   &quot;status&quot;: &quot;reverted&quot;,
+   &quot;check&quot;: &quot;ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22&quot;,
+   &quot;title&quot;: &quot;Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)&quot;
+  },
+  {
+   &quot;time&quot;: &quot;2026-10-09T19:27:23Z&quot;,
+   &quot;kind&quot;: &quot;self-fix&quot;,
+   &quot;status&quot;: &quot;fixed-verified&quot;,
+   &quot;check&quot;: &quot;ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22&quot;,
+   &quot;title&quot;: &quot;Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)&quot;
+  }
+ ],
+ &quot;detections&quot;: [
+  {
+   &quot;time&quot;: &quot;2026-10-09T19:47:37Z&quot;,
+   &quot;severity&quot;: &quot;high&quot;,
+   &quot;title&quot;: &quot;Port 22 opened to the internet&quot;,
+   &quot;verdict&quot;: &quot;compliant&quot;
+  },
+  {
+   &quot;time&quot;: &quot;2026-10-09T19:29:10Z&quot;,
+   &quot;severity&quot;: &quot;high&quot;,
+   &quot;title&quot;: &quot;Port 22 opened to the internet&quot;,
+   &quot;verdict&quot;: &quot;violation&quot;
+  },
+  {
+   &quot;time&quot;: &quot;2026-10-09T19:21:44Z&quot;,
+   &quot;severity&quot;: &quot;high&quot;,
+   &quot;title&quot;: &quot;Port 22 opened to the internet&quot;,
+   &quot;verdict&quot;: &quot;violation&quot;
+  }
+ ],
+ &quot;failing_requirements&quot;: [
+  {
+   &quot;req&quot;: &quot;1.11&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure credentials unused for 45 days or more are disabled&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;iam_user_accesskey_unused&quot;,
+     &quot;title&quot;: &quot;IAM user does not have unused access keys older than 45 days&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;1.13&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure access keys are rotated every 90 days or less&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;iam_rotate_access_key_90_days&quot;,
+     &quot;title&quot;: &quot;IAM user does not have active access keys older than 90 days&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;1.14&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure IAM users receive permissions only through groups&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;iam_policy_attached_only_to_group_or_roles&quot;,
+     &quot;title&quot;: &quot;IAM user has no inline or attached policies&quot;,
+     &quot;severity&quot;: &quot;low&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;1.15&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure IAM policies that allow full *:* administrative privileges are not attached&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;iam_aws_attached_policy_no_administrative_privileges&quot;,
+     &quot;title&quot;: &quot;Attached AWS-managed IAM policy does not allow &#x27;*:*&#x27; administrative privileges&quot;,
+     &quot;severity&quot;: &quot;critical&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;1.17&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure IAM instance roles are used for AWS resource access from instances&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;ec2_instance_profile_attached&quot;,
+     &quot;title&quot;: &quot;EC2 instance is associated with an IAM instance profile role&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;1.4&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure MFA is enabled for the &#x27;root&#x27; user account&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;iam_root_mfa_enabled&quot;,
+     &quot;title&quot;: &quot;Root account has MFA enabled&quot;,
+     &quot;severity&quot;: &quot;critical&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;1.5&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure hardware MFA is enabled for the &#x27;root&#x27; user account&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;iam_root_hardware_mfa_enabled&quot;,
+     &quot;title&quot;: &quot;Root account has a hardware MFA device enabled&quot;,
+     &quot;severity&quot;: &quot;critical&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;1.8&quot;,
+   &quot;section&quot;: &quot;1 Identity and Access Management&quot;,
+   &quot;description&quot;: &quot;Ensure IAM password policy prevents password reuse&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;iam_password_policy_reuse_24&quot;,
+     &quot;title&quot;: &quot;IAM password policy prevents reuse of the last 24 passwords&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;2.1.1&quot;,
+   &quot;section&quot;: &quot;2 Storage&quot;,
+   &quot;description&quot;: &quot;Ensure S3 Bucket Policy is set to deny HTTP requests&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;s3_bucket_secure_transport_policy&quot;,
+     &quot;title&quot;: &quot;S3 bucket policy denies requests over insecure transport&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;2.1.2&quot;,
+   &quot;section&quot;: &quot;2 Storage&quot;,
+   &quot;description&quot;: &quot;Ensure MFA Delete is enabled on S3 buckets&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;s3_bucket_no_mfa_delete&quot;,
+     &quot;title&quot;: &quot;S3 bucket has MFA Delete enabled&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;2.1.3&quot;,
+   &quot;section&quot;: &quot;2 Storage&quot;,
+   &quot;description&quot;: &quot;Ensure all data in Amazon S3 has been discovered, classified, and secured when necessary&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;macie_is_enabled&quot;,
+     &quot;title&quot;: &quot;Amazon Macie is enabled&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;2.1.4&quot;,
+   &quot;section&quot;: &quot;2 Storage&quot;,
+   &quot;description&quot;: &quot;Ensure that S3 is configured with &#x27;Block Public Access&#x27; enabled&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;s3_bucket_level_public_access_block&quot;,
+     &quot;title&quot;: &quot;S3 bucket has Block Public Access with IgnorePublicAcls and RestrictPublicBuckets enabled at bucket or account level&quot;,
+     &quot;severity&quot;: &quot;high&quot;
+    },
+    {
+     &quot;id&quot;: &quot;s3_account_level_public_access_blocks&quot;,
+     &quot;title&quot;: &quot;S3 account-level Block Public Access ignores public ACLs and restricts public buckets&quot;,
+     &quot;severity&quot;: &quot;high&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;3.3&quot;,
+   &quot;section&quot;: &quot;3 Logging&quot;,
+   &quot;description&quot;: &quot;Ensure AWS Config is enabled in all regions&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;config_recorder_all_regions_enabled&quot;,
+     &quot;title&quot;: &quot;AWS Config recorder is enabled and not in failure state or disabled&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;3.5&quot;,
+   &quot;section&quot;: &quot;3 Logging&quot;,
+   &quot;description&quot;: &quot;Ensure CloudTrail logs are encrypted at rest using KMS CMKs&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudtrail_kms_encryption_enabled&quot;,
+     &quot;title&quot;: &quot;CloudTrail trail logs are encrypted at rest with a KMS key&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;3.7&quot;,
+   &quot;section&quot;: &quot;3 Logging&quot;,
+   &quot;description&quot;: &quot;Ensure VPC flow logging is enabled in all VPCs&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;vpc_flow_logs_enabled&quot;,
+     &quot;title&quot;: &quot;VPC flow logs are enabled&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;3.8&quot;,
+   &quot;section&quot;: &quot;3 Logging&quot;,
+   &quot;description&quot;: &quot;Ensure that object-level logging for write events is enabled for S3 buckets&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudtrail_s3_dataevents_write_enabled&quot;,
+     &quot;title&quot;: &quot;CloudTrail trail records all S3 object-level API operations for all buckets&quot;,
+     &quot;severity&quot;: &quot;low&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;3.9&quot;,
+   &quot;section&quot;: &quot;3 Logging&quot;,
+   &quot;description&quot;: &quot;Ensure that object-level logging for read events is enabled for S3 buckets&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudtrail_s3_dataevents_read_enabled&quot;,
+     &quot;title&quot;: &quot;CloudTrail trail records S3 object-level read events for all S3 buckets&quot;,
+     &quot;severity&quot;: &quot;low&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.1&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure unauthorized API calls are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_unauthorized_api_calls&quot;,
+     &quot;title&quot;: &quot;CloudWatch Logs metric filter and alarm exist for unauthorized API calls&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.10&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure security group changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_security_group_changes&quot;,
+     &quot;title&quot;: &quot;CloudWatch Logs metric filter and alarm exist for security group changes&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.11&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure Network Access Control List (NACL) changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_changes_to_network_acls_alarm_configured&quot;,
+     &quot;title&quot;: &quot;CloudWatch log metric filter and alarm exist for Network ACL (NACL) change events&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.12&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure changes to network gateways are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_changes_to_network_gateways_alarm_configured&quot;,
+     &quot;title&quot;: &quot;CloudWatch Logs metric filter and alarm exist for changes to network gateways&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.13&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure route table changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_changes_to_network_route_tables_alarm_configured&quot;,
+     &quot;title&quot;: &quot;Account monitors VPC route table changes with a CloudWatch Logs metric filter and alarm&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.14&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure VPC changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_changes_to_vpcs_alarm_configured&quot;,
+     &quot;title&quot;: &quot;AWS account has a CloudWatch Logs metric filter and alarm for VPC changes&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.15&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure AWS Organizations changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_aws_organizations_changes&quot;,
+     &quot;title&quot;: &quot;CloudWatch Logs metric filter and alarm exist for AWS Organizations changes&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.2&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure management console sign-in without MFA is monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_sign_in_without_mfa&quot;,
+     &quot;title&quot;: &quot;CloudWatch log metric filter and alarm exist for Management Console sign-in without MFA&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.3&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure usage of the &#x27;root&#x27; account is monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_root_usage&quot;,
+     &quot;title&quot;: &quot;Account has a CloudWatch Logs metric filter and alarm for root account usage&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.4&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure IAM policy changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_policy_changes&quot;,
+     &quot;title&quot;: &quot;CloudWatch Logs metric filter and alarm exist for IAM policy changes&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.5&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure CloudTrail configuration changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled&quot;,
+     &quot;title&quot;: &quot;CloudWatch Logs metric filter and alarm exist for CloudTrail configuration changes&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.6&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure AWS Management Console authentication failures are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_authentication_failures&quot;,
+     &quot;title&quot;: &quot;Account has a CloudWatch Logs metric filter and alarm for AWS Management Console authentication failures&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.7&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure disabling or scheduled deletion of customer created CMKs is monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk&quot;,
+     &quot;title&quot;: &quot;Account has a CloudWatch log metric filter and alarm for disabling or scheduled deletion of customer-managed KMS keys&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.8&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure S3 bucket policy changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_for_s3_bucket_policy_changes&quot;,
+     &quot;title&quot;: &quot;CloudWatch log metric filter and alarm exist for S3 bucket policy changes&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;4.9&quot;,
+   &quot;section&quot;: &quot;4 Monitoring&quot;,
+   &quot;description&quot;: &quot;Ensure AWS Config configuration changes are monitored&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled&quot;,
+     &quot;title&quot;: &quot;CloudWatch Logs metric filter and alarm exist for AWS Config configuration changes&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;5.1.1&quot;,
+   &quot;section&quot;: &quot;5 Networking&quot;,
+   &quot;description&quot;: &quot;Ensure EBS volume encryption is enabled in all regions&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;ec2_ebs_volume_encryption&quot;,
+     &quot;title&quot;: &quot;EBS volume is encrypted&quot;,
+     &quot;severity&quot;: &quot;high&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;5.2&quot;,
+   &quot;section&quot;: &quot;5 Networking&quot;,
+   &quot;description&quot;: &quot;Ensure no Network ACLs allow ingress from 0.0.0.0/0 to remote server administration ports&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;ec2_networkacl_allow_ingress_any_port&quot;,
+     &quot;title&quot;: &quot;Network ACL does not allow ingress from 0.0.0.0/0 to any port&quot;,
+     &quot;severity&quot;: &quot;high&quot;
+    },
+    {
+     &quot;id&quot;: &quot;ec2_networkacl_allow_ingress_tcp_port_22&quot;,
+     &quot;title&quot;: &quot;Network ACL does not allow ingress from the Internet to TCP port 22 (SSH)&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    },
+    {
+     &quot;id&quot;: &quot;ec2_networkacl_allow_ingress_tcp_port_3389&quot;,
+     &quot;title&quot;: &quot;Network ACL does not allow ingress from the Internet to TCP port 3389 (RDP)&quot;,
+     &quot;severity&quot;: &quot;medium&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;5.3&quot;,
+   &quot;section&quot;: &quot;5 Networking&quot;,
+   &quot;description&quot;: &quot;Ensure no security groups allow ingress from 0.0.0.0/0 to remote server administration ports&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22&quot;,
+     &quot;title&quot;: &quot;Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)&quot;,
+     &quot;severity&quot;: &quot;high&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;5.4&quot;,
+   &quot;section&quot;: &quot;5 Networking&quot;,
+   &quot;description&quot;: &quot;Ensure no security groups allow ingress from ::/0 to remote server administration ports&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22&quot;,
+     &quot;title&quot;: &quot;Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)&quot;,
+     &quot;severity&quot;: &quot;high&quot;
+    }
+   ]
+  },
+  {
+   &quot;req&quot;: &quot;5.5&quot;,
+   &quot;section&quot;: &quot;5 Networking&quot;,
+   &quot;description&quot;: &quot;Ensure the default security group of every VPC restricts all traffic&quot;,
+   &quot;checks&quot;: [
+    {
+     &quot;id&quot;: &quot;ec2_securitygroup_default_restrict_traffic&quot;,
+     &quot;title&quot;: &quot;VPC default security group has no inbound or outbound rules&quot;,
+     &quot;severity&quot;: &quot;high&quot;
+    }
+   ]
+  }
+ ],
+ &quot;sha256&quot;: &quot;b3ea4a12be61561a52fee4a6221049d4e20f9ac5ed61c378feae487684e3c40e&quot;
+}</pre></details>
+<div class="m" style="margin-top:10px">Resource identifiers and actor identities are intentionally omitted from this page.</div></div>
+</main></body></html>

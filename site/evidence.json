@@ -1,0 +1,545 @@
+{
+  "account": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20227653",
+  "actions": [
+    {
+      "check": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+      "kind": "self-fix",
+      "status": "fixed-verified",
+      "time": "2026-10-09T19:31:31Z",
+      "title": "Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)"
+    },
+    {
+      "check": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+      "kind": "self-fix",
+      "status": "reverted",
+      "time": "2026-10-09T19:29:10Z",
+      "title": "Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)"
+    },
+    {
+      "check": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+      "kind": "self-fix",
+      "status": "fixed-verified",
+      "time": "2026-10-09T19:27:23Z",
+      "title": "Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)"
+    }
+  ],
+  "coverage": {
+    "scanned": 58,
+    "total": 70
+  },
+  "detections": [
+    {
+      "severity": "high",
+      "time": "2026-10-09T19:47:37Z",
+      "title": "Port 22 opened to the internet",
+      "verdict": "compliant"
+    },
+    {
+      "severity": "high",
+      "time": "2026-10-09T19:29:10Z",
+      "title": "Port 22 opened to the internet",
+      "verdict": "violation"
+    },
+    {
+      "severity": "high",
+      "time": "2026-10-09T19:21:44Z",
+      "title": "Port 22 opened to the internet",
+      "verdict": "violation"
+    }
+  ],
+  "failing_requirements": [
+    {
+      "checks": [
+        {
+          "id": "iam_user_accesskey_unused",
+          "severity": "medium",
+          "title": "IAM user does not have unused access keys older than 45 days"
+        }
+      ],
+      "description": "Ensure credentials unused for 45 days or more are disabled",
+      "req": "1.11",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "iam_rotate_access_key_90_days",
+          "severity": "medium",
+          "title": "IAM user does not have active access keys older than 90 days"
+        }
+      ],
+      "description": "Ensure access keys are rotated every 90 days or less",
+      "req": "1.13",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "iam_policy_attached_only_to_group_or_roles",
+          "severity": "low",
+          "title": "IAM user has no inline or attached policies"
+        }
+      ],
+      "description": "Ensure IAM users receive permissions only through groups",
+      "req": "1.14",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "iam_aws_attached_policy_no_administrative_privileges",
+          "severity": "critical",
+          "title": "Attached AWS-managed IAM policy does not allow '*:*' administrative privileges"
+        }
+      ],
+      "description": "Ensure IAM policies that allow full *:* administrative privileges are not attached",
+      "req": "1.15",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "ec2_instance_profile_attached",
+          "severity": "medium",
+          "title": "EC2 instance is associated with an IAM instance profile role"
+        }
+      ],
+      "description": "Ensure IAM instance roles are used for AWS resource access from instances",
+      "req": "1.17",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "iam_root_mfa_enabled",
+          "severity": "critical",
+          "title": "Root account has MFA enabled"
+        }
+      ],
+      "description": "Ensure MFA is enabled for the 'root' user account",
+      "req": "1.4",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "iam_root_hardware_mfa_enabled",
+          "severity": "critical",
+          "title": "Root account has a hardware MFA device enabled"
+        }
+      ],
+      "description": "Ensure hardware MFA is enabled for the 'root' user account",
+      "req": "1.5",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "iam_password_policy_reuse_24",
+          "severity": "medium",
+          "title": "IAM password policy prevents reuse of the last 24 passwords"
+        }
+      ],
+      "description": "Ensure IAM password policy prevents password reuse",
+      "req": "1.8",
+      "section": "1 Identity and Access Management"
+    },
+    {
+      "checks": [
+        {
+          "id": "s3_bucket_secure_transport_policy",
+          "severity": "medium",
+          "title": "S3 bucket policy denies requests over insecure transport"
+        }
+      ],
+      "description": "Ensure S3 Bucket Policy is set to deny HTTP requests",
+      "req": "2.1.1",
+      "section": "2 Storage"
+    },
+    {
+      "checks": [
+        {
+          "id": "s3_bucket_no_mfa_delete",
+          "severity": "medium",
+          "title": "S3 bucket has MFA Delete enabled"
+        }
+      ],
+      "description": "Ensure MFA Delete is enabled on S3 buckets",
+      "req": "2.1.2",
+      "section": "2 Storage"
+    },
+    {
+      "checks": [
+        {
+          "id": "macie_is_enabled",
+          "severity": "medium",
+          "title": "Amazon Macie is enabled"
+        }
+      ],
+      "description": "Ensure all data in Amazon S3 has been discovered, classified, and secured when necessary",
+      "req": "2.1.3",
+      "section": "2 Storage"
+    },
+    {
+      "checks": [
+        {
+          "id": "s3_bucket_level_public_access_block",
+          "severity": "high",
+          "title": "S3 bucket has Block Public Access with IgnorePublicAcls and RestrictPublicBuckets enabled at bucket or account level"
+        },
+        {
+          "id": "s3_account_level_public_access_blocks",
+          "severity": "high",
+          "title": "S3 account-level Block Public Access ignores public ACLs and restricts public buckets"
+        }
+      ],
+      "description": "Ensure that S3 is configured with 'Block Public Access' enabled",
+      "req": "2.1.4",
+      "section": "2 Storage"
+    },
+    {
+      "checks": [
+        {
+          "id": "config_recorder_all_regions_enabled",
+          "severity": "medium",
+          "title": "AWS Config recorder is enabled and not in failure state or disabled"
+        }
+      ],
+      "description": "Ensure AWS Config is enabled in all regions",
+      "req": "3.3",
+      "section": "3 Logging"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudtrail_kms_encryption_enabled",
+          "severity": "medium",
+          "title": "CloudTrail trail logs are encrypted at rest with a KMS key"
+        }
+      ],
+      "description": "Ensure CloudTrail logs are encrypted at rest using KMS CMKs",
+      "req": "3.5",
+      "section": "3 Logging"
+    },
+    {
+      "checks": [
+        {
+          "id": "vpc_flow_logs_enabled",
+          "severity": "medium",
+          "title": "VPC flow logs are enabled"
+        }
+      ],
+      "description": "Ensure VPC flow logging is enabled in all VPCs",
+      "req": "3.7",
+      "section": "3 Logging"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudtrail_s3_dataevents_write_enabled",
+          "severity": "low",
+          "title": "CloudTrail trail records all S3 object-level API operations for all buckets"
+        }
+      ],
+      "description": "Ensure that object-level logging for write events is enabled for S3 buckets",
+      "req": "3.8",
+      "section": "3 Logging"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudtrail_s3_dataevents_read_enabled",
+          "severity": "low",
+          "title": "CloudTrail trail records S3 object-level read events for all S3 buckets"
+        }
+      ],
+      "description": "Ensure that object-level logging for read events is enabled for S3 buckets",
+      "req": "3.9",
+      "section": "3 Logging"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_unauthorized_api_calls",
+          "severity": "medium",
+          "title": "CloudWatch Logs metric filter and alarm exist for unauthorized API calls"
+        }
+      ],
+      "description": "Ensure unauthorized API calls are monitored",
+      "req": "4.1",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_security_group_changes",
+          "severity": "medium",
+          "title": "CloudWatch Logs metric filter and alarm exist for security group changes"
+        }
+      ],
+      "description": "Ensure security group changes are monitored",
+      "req": "4.10",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_changes_to_network_acls_alarm_configured",
+          "severity": "medium",
+          "title": "CloudWatch log metric filter and alarm exist for Network ACL (NACL) change events"
+        }
+      ],
+      "description": "Ensure Network Access Control List (NACL) changes are monitored",
+      "req": "4.11",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_changes_to_network_gateways_alarm_configured",
+          "severity": "medium",
+          "title": "CloudWatch Logs metric filter and alarm exist for changes to network gateways"
+        }
+      ],
+      "description": "Ensure changes to network gateways are monitored",
+      "req": "4.12",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_changes_to_network_route_tables_alarm_configured",
+          "severity": "medium",
+          "title": "Account monitors VPC route table changes with a CloudWatch Logs metric filter and alarm"
+        }
+      ],
+      "description": "Ensure route table changes are monitored",
+      "req": "4.13",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_changes_to_vpcs_alarm_configured",
+          "severity": "medium",
+          "title": "AWS account has a CloudWatch Logs metric filter and alarm for VPC changes"
+        }
+      ],
+      "description": "Ensure VPC changes are monitored",
+      "req": "4.14",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_aws_organizations_changes",
+          "severity": "medium",
+          "title": "CloudWatch Logs metric filter and alarm exist for AWS Organizations changes"
+        }
+      ],
+      "description": "Ensure AWS Organizations changes are monitored",
+      "req": "4.15",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_sign_in_without_mfa",
+          "severity": "medium",
+          "title": "CloudWatch log metric filter and alarm exist for Management Console sign-in without MFA"
+        }
+      ],
+      "description": "Ensure management console sign-in without MFA is monitored",
+      "req": "4.2",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_root_usage",
+          "severity": "medium",
+          "title": "Account has a CloudWatch Logs metric filter and alarm for root account usage"
+        }
+      ],
+      "description": "Ensure usage of the 'root' account is monitored",
+      "req": "4.3",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_policy_changes",
+          "severity": "medium",
+          "title": "CloudWatch Logs metric filter and alarm exist for IAM policy changes"
+        }
+      ],
+      "description": "Ensure IAM policy changes are monitored",
+      "req": "4.4",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled",
+          "severity": "medium",
+          "title": "CloudWatch Logs metric filter and alarm exist for CloudTrail configuration changes"
+        }
+      ],
+      "description": "Ensure CloudTrail configuration changes are monitored",
+      "req": "4.5",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_authentication_failures",
+          "severity": "medium",
+          "title": "Account has a CloudWatch Logs metric filter and alarm for AWS Management Console authentication failures"
+        }
+      ],
+      "description": "Ensure AWS Management Console authentication failures are monitored",
+      "req": "4.6",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk",
+          "severity": "medium",
+          "title": "Account has a CloudWatch log metric filter and alarm for disabling or scheduled deletion of customer-managed KMS keys"
+        }
+      ],
+      "description": "Ensure disabling or scheduled deletion of customer created CMKs is monitored",
+      "req": "4.7",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_for_s3_bucket_policy_changes",
+          "severity": "medium",
+          "title": "CloudWatch log metric filter and alarm exist for S3 bucket policy changes"
+        }
+      ],
+      "description": "Ensure S3 bucket policy changes are monitored",
+      "req": "4.8",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled",
+          "severity": "medium",
+          "title": "CloudWatch Logs metric filter and alarm exist for AWS Config configuration changes"
+        }
+      ],
+      "description": "Ensure AWS Config configuration changes are monitored",
+      "req": "4.9",
+      "section": "4 Monitoring"
+    },
+    {
+      "checks": [
+        {
+          "id": "ec2_ebs_volume_encryption",
+          "severity": "high",
+          "title": "EBS volume is encrypted"
+        }
+      ],
+      "description": "Ensure EBS volume encryption is enabled in all regions",
+      "req": "5.1.1",
+      "section": "5 Networking"
+    },
+    {
+      "checks": [
+        {
+          "id": "ec2_networkacl_allow_ingress_any_port",
+          "severity": "high",
+          "title": "Network ACL does not allow ingress from 0.0.0.0/0 to any port"
+        },
+        {
+          "id": "ec2_networkacl_allow_ingress_tcp_port_22",
+          "severity": "medium",
+          "title": "Network ACL does not allow ingress from the Internet to TCP port 22 (SSH)"
+        },
+        {
+          "id": "ec2_networkacl_allow_ingress_tcp_port_3389",
+          "severity": "medium",
+          "title": "Network ACL does not allow ingress from the Internet to TCP port 3389 (RDP)"
+        }
+      ],
+      "description": "Ensure no Network ACLs allow ingress from 0.0.0.0/0 to remote server administration ports",
+      "req": "5.2",
+      "section": "5 Networking"
+    },
+    {
+      "checks": [
+        {
+          "id": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+          "severity": "high",
+          "title": "Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)"
+        }
+      ],
+      "description": "Ensure no security groups allow ingress from 0.0.0.0/0 to remote server administration ports",
+      "req": "5.3",
+      "section": "5 Networking"
+    },
+    {
+      "checks": [
+        {
+          "id": "ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22",
+          "severity": "high",
+          "title": "Security group does not allow ingress from 0.0.0.0/0 or ::/0 to TCP port 22 (SSH)"
+        }
+      ],
+      "description": "Ensure no security groups allow ingress from ::/0 to remote server administration ports",
+      "req": "5.4",
+      "section": "5 Networking"
+    },
+    {
+      "checks": [
+        {
+          "id": "ec2_securitygroup_default_restrict_traffic",
+          "severity": "high",
+          "title": "VPC default security group has no inbound or outbound rules"
+        }
+      ],
+      "description": "Ensure the default security group of every VPC restricts all traffic",
+      "req": "5.5",
+      "section": "5 Networking"
+    }
+  ],
+  "framework": {
+    "id": "cis_5.0_aws",
+    "name": "CIS Amazon Web Services Foundations Benchmark v5.0.0",
+    "version": "5.0"
+  },
+  "generated_at": "2026-10-09T21:02:58+00:00",
+  "projection": [
+    {
+      "pct": 28.8,
+      "step": "Today"
+    },
+    {
+      "pct": 34.6,
+      "step": "+ self-fix"
+    },
+    {
+      "pct": 84.6,
+      "step": "+ PRs to code"
+    },
+    {
+      "pct": 100.0,
+      "step": "+ human tasks"
+    }
+  ],
+  "region": "us-east-1",
+  "score": {
+    "fail": 37,
+    "graded": 52,
+    "manual": 0,
+    "no_data": 11,
+    "pass": 15,
+    "pct": 28.8
+  },
+  "sha256": "b3ea4a12be61561a52fee4a6221049d4e20f9ac5ed61c378feae487684e3c40e"
+}

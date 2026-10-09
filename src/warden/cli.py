@@ -189,3 +189,37 @@ def live_reset():
     """Delete the demo VPC + security group so the demo can run again."""
     from . import live_demo
     console.print(live_demo.reset())
+
+
+@app.command()
+def publish(account: str = typer.Argument(None), framework: str = config.DEFAULT_FRAMEWORK, out: str = "site"):
+    """Publisher: write a redacted, hash-stamped compliance status page (site/index.html + evidence.json)."""
+    from pathlib import Path
+    from . import publisher
+    console.print(publisher.publish(account or config.ACCOUNT, framework, Path(out)))
+
+
+@app.command()
+def preflight():
+    """Check everything the live demo needs and print what to fix."""
+    import os
+    import boto3
+    from . import live_demo, policy, signals
+    ok = lambda b, t, hint="": console.print(("[green]ok[/]   " if b else "[red]FAIL[/] ") + t + ("" if b else f"  -> {hint}"))
+    try:
+        db.client().command("SELECT 1"); ok(True, "ClickHouse reachable")
+    except Exception as e:
+        ok(False, "ClickHouse reachable", str(e)[:80])
+    try:
+        ident = boto3.Session(profile_name=config.PROFILE).client("sts").get_caller_identity()["Account"]
+        ok(ident == config.ACCOUNT, f"AWS session valid for {config.ACCOUNT}", "aws sso login --profile " + str(config.PROFILE))
+    except Exception:
+        ok(False, "AWS session valid", "aws sso login --profile " + str(config.PROFILE))
+    p = policy.get()
+    ok(True, f"mode={p['mode']} dry_run={p['dry_run']} open_pr={p['open_pr']} repo={'set' if p['repo'] else 'missing'}")
+    ok(all(os.getenv(k) for k in ("GUILD_API_URL", "GUILD_TRIGGER_KEY_ID", "GUILD_TRIGGER_KEY_SECRET", "GUILD_SLACK_CHANNEL")), "Guild to Slack alerts configured", "fill GUILD_* in .env")
+    ok(bool(os.getenv("ANTHROPIC_API_KEY")), "ANTHROPIC_API_KEY set", "add it to .env")
+    try:
+        console.print(f"      demo resources: {live_demo.status()}  cost overlay: {'on' if signals.demo_active(config.ACCOUNT) else 'off'}")
+    except Exception as e:
+        ok(False, "demo status", str(e)[:80])

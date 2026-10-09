@@ -106,9 +106,10 @@ def fix_in_code(repo: Path, uid: str, check: str, region: str, profile: str | No
     out = {"status": "branch-ready", "address": address, "branch": branch, "removed_rules": removed, "semgrep": len(findings), "pr": None}
     if open_pr:
         _git(repo, "push", "-q", "-u", "origin", branch, "--force")
-        out["pr"] = _git(repo, "-c", "core.quotepath=off", "log", "-1", "--format=%H").strip()
-        out["pr"] = subprocess.run(["gh", "pr", "create", "--title", f"Warden: close internet ingress on {address}", "--body", body, "--head", branch],
-                                   cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+        existing = subprocess.run(["gh", "pr", "list", "--head", branch, "--state", "open", "--json", "url", "--jq", ".[0].url"],
+                                  cwd=repo, capture_output=True, text=True).stdout.strip()
+        out["pr"] = existing or subprocess.run(["gh", "pr", "create", "--title", f"Warden: close internet ingress on {address}", "--body", body, "--head", branch],
+                                               cwd=repo, check=True, capture_output=True, text=True).stdout.strip()  # reuse the open PR on repeat runs
         out["status"] = "pr-opened"
     _git(repo, "checkout", "-q", "master")
     return out
