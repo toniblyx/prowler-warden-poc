@@ -78,6 +78,10 @@ SCHEMA = [
         day Date, account_id LowCardinality(String), service LowCardinality(String), region LowCardinality(String),
         amount Float64, fetched DateTime DEFAULT now()
     ) ENGINE = ReplacingMergeTree(fetched) ORDER BY (account_id, service, region, day)""",
+    """CREATE TABLE IF NOT EXISTS cost_demo (
+        day Date, account_id LowCardinality(String), service LowCardinality(String), region LowCardinality(String),
+        amount Float64, note String
+    ) ENGINE = MergeTree ORDER BY (account_id, service, region, day)""",
     """CREATE TABLE IF NOT EXISTS policy (
         key String, value String, updated DateTime DEFAULT now()
     ) ENGINE = ReplacingMergeTree(updated) ORDER BY key""",

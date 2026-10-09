@@ -204,3 +204,13 @@ def events(limit: int = 80, writes: bool = False):
       ON d.event_id = e.event_id ORDER BY e.event_time DESC""")
     stats = db.query("SELECT count() AS n, countIf(read_only = 0) AS writes FROM cloudtrail_events WHERE event_time > now() - INTERVAL 1 HOUR")[0]
     return {"events": rows, "last_hour": stats, "now": time.time()}
+
+
+@app.get("/api/cost")
+def cost(account: str):
+    return {"series": signals.series(account), "anomalies": signals.cost_anomalies(account), "demo": signals.demo_active(account)}
+
+
+@app.post("/api/demo/cost/{on}")
+def cost_demo(on: bool, account: str):
+    return signals.demo_spike(account, on)

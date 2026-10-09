@@ -41,7 +41,7 @@ def cost_anomalies(account: str, min_ratio: float = 2.0, min_delta: float = 1.0,
              sumIf(amount, day = (SELECT d FROM latest)) AS today,
              avgIf(amount, day < (SELECT d FROM latest) AND day >= (SELECT d FROM latest) - {int(window)}) AS base,
              stddevPopIf(amount, day < (SELECT d FROM latest) AND day >= (SELECT d FROM latest) - {int(window)}) AS sd
-      FROM cost_daily WHERE account_id={{a:String}} GROUP BY service, region)
+      FROM (SELECT day, account_id, service, region, amount FROM cost_daily UNION ALL SELECT day, account_id, service, region, amount FROM cost_demo) WHERE account_id={{a:String}} GROUP BY service, region)
     WHERE today - base >= {{md:Float64}} AND today / greatest(base, 0.01) >= {{mr:Float64}}
     ORDER BY delta DESC""", {"a": account, "md": min_delta, "mr": min_ratio})
 
@@ -74,7 +74,7 @@ def prioritize(account: str, framework: str, limit: int = 25) -> list[dict]:
     activity = suspicious_activity(account)
     prefixes = {}
     for a in anomalies:
-        for pre in SERVICE_CHECKS.get(a["service"], []):
+        for pre in SERVICE_CHECKS.get(a["service"]) or (["bedrock", "iam"] if "Bedrock" in a["service"] else []):
             prefixes.setdefault(pre, []).append(f"cost spike {a['service']} {a['region']}: ${a['base']:.2f}->${a['today']:.2f}/day ({a['ratio']}x)")
     for s in activity:
         pre = s["service"].split(".")[0]
@@ -86,8 +86,47 @@ def prioritize(account: str, framework: str, limit: int = 25) -> list[dict]:
     GROUP BY check_id""", {"a": account, "f": framework})
     out = []
     for f in fails:
-        ev = prefixes.get(f["service"], []) + (prefixes.get("iam", []) if f["service"] == "iam" else [])
+        ev = list(dict.fromkeys(prefixes.get(f["service"], [])))
         score = SEV_W.get(f["severity"], 1) + min(6, 2 * len(ev))
         verdict = "likely-being-used" if len(ev) >= 2 else "signal" if ev else "misconfigured-only"
         out.append({**f, "score": score, "evidence": ev, "verdict": verdict})
     return sorted(out, key=lambda x: -x["score"])[:limit]
+
+
+DEMO_SPIKES = [  # (service, region, extra $ on the latest day, extra $ the day before, story)
+    ("Amazon Elastic Compute Cloud - Compute", "us-east-1", 48.0, 6.0, "unexpected compute (cryptomining pattern)"),
+    ("EC2 - Other", "us-east-1", 19.0, 1.0, "data transfer out (exfiltration pattern)"),
+    ("Claude Sonnet 4.6 (Amazon Bedrock Edition)", "us-east-1", 22.0, 2.0, "model invocations (LLMjacking pattern)"),
+]
+
+
+def demo_spike(account: str, on: bool) -> dict:
+    """Overlay clearly-labelled synthetic spend on top of the real Cost Explorer data. Never touches real rows."""
+    c = db.init()
+    c.command("ALTER TABLE cost_demo DELETE WHERE account_id = %(a)s SETTINGS mutations_sync=1", parameters={"a": account})
+    if on:
+        d = db.query("SELECT max(day) AS d FROM cost_daily WHERE account_id={a:String}", {"a": account})[0]["d"]
+        rows = []
+        for svc, region, today, yday, note in DEMO_SPIKES:
+            rows += [[d, account, svc, region, today, "DEMO: " + note], [d - timedelta(days=1), account, svc, region, yday, "DEMO: " + note]]
+        c.insert("cost_demo", rows, column_names=["day", "account_id", "service", "region", "amount", "note"])
+    return {"demo_spike": on}
+
+
+def demo_active(account: str) -> bool:
+    return db.query("SELECT count() AS n FROM cost_demo WHERE account_id={a:String}", {"a": account})[0]["n"] > 0
+
+
+def series(account: str, days: int = 14, top: int = 5) -> list[dict]:
+    """Daily cost for the services with the highest latest-day spend (real + demo overlay)."""
+    rows = db.query(f"""
+    SELECT service, region, day, sum(amount) AS total, sumIf(amount, src = 1) AS demo_amt FROM (
+      SELECT service, region, day, amount, 0 AS src FROM cost_daily WHERE account_id={{a:String}}
+      UNION ALL SELECT service, region, day, amount, 1 AS src FROM cost_demo WHERE account_id={{a:String}})
+    WHERE day > (SELECT max(day) FROM cost_daily WHERE account_id={{a:String}}) - {int(days)} AND region != 'global'
+    GROUP BY service, region, day ORDER BY service, region, day""", {"a": account})
+    by = {}
+    for r in rows:
+        by.setdefault((r["service"], r["region"]), []).append({"day": str(r["day"]), "amount": round(r["total"], 2), "demo": round(r["demo_amt"], 2)})
+    out = [{"service": k[0], "region": k[1], "days": v, "latest": v[-1]["amount"], "base": round(sum(x["amount"] for x in v[:-2]) / max(1, len(v) - 2), 2)} for k, v in by.items()]
+    return sorted(out, key=lambda x: -x["latest"])[:top]
