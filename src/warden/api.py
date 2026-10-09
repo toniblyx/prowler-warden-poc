@@ -5,12 +5,14 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import agent, cloudtrail, compliance, db, policy, signals
 
 app = FastAPI(title="Warden")
 STATIC = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 def timed(fn, *a):
@@ -87,7 +89,7 @@ def detections():
 
 @app.get("/api/actions")
 def actions():
-    return db.query("SELECT toString(id) AS id, ts, kind, status, check_id, resource_uid, summary FROM actions FINAL ORDER BY ts DESC LIMIT 25")
+    return db.query("SELECT toString(id) AS id, ts, kind, status, check_id, resource_uid, summary, command FROM actions FINAL ORDER BY ts DESC LIMIT 25")
 
 
 @app.get("/api/signals")

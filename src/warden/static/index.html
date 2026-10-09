@@ -1,80 +1,133 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Warden</title>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prowler Warden</title>
+<link rel="icon" href="/static/prowler-logo-white.png">
 <style>
-:root{--bg:#0e1116;--card:#171b22;--fg:#e6edf3;--mut:#8b949e;--ok:#3fb950;--bad:#f85149;--warn:#d29922;--acc:#58a6ff;--bd:#262c36}
-@media(prefers-color-scheme:light){:root{--bg:#f6f8fa;--card:#fff;--fg:#1f2328;--mut:#656d76;--bd:#d0d7de}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,sans-serif;padding:16px;max-width:1200px;margin:auto}
-h1{font-size:20px;margin:0}header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.pill{color:var(--mut);font-size:12px}select,button{background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px 10px;font:inherit}
-button.p{background:var(--acc);color:#fff;border-color:var(--acc);cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
-.big{font-size:44px;font-weight:700}.ok{color:var(--ok)}.bad{color:var(--bad)}h2{font-size:13px;color:var(--mut);margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em}
-table{width:100%;border-collapse:collapse;font-size:12.5px}td,th{text-align:left;padding:4px 6px;border-bottom:1px solid var(--bd);vertical-align:top;word-break:break-all}
-.sev-critical,.sev-high{color:var(--bad)}.sev-medium{color:var(--warn)}pre{white-space:pre-wrap;margin:0;font:13px/1.5 ui-monospace,monospace}
-canvas{width:100%;height:140px}
+.brand .logo-b{display:none}
+:root{--bg:#0b0d10;--panel:#12161b;--panel2:#171c22;--line:#222a33;--fg:#eef2f6;--mut:#8a97a6;--acc:#3ddc97;--acc-fg:#04130b;--bad:#ff5d6c;--warn:#f5b84b;--ok:#3ddc97;--blue:#6aa8ff;--r:12px}
+@media(prefers-color-scheme:light){:root{--bg:#f4f6f8;--panel:#fff;--panel2:#f0f3f6;--line:#dde3ea;--fg:#10161d;--mut:#5d6b7a;--acc:#14a56a;--acc-fg:#fff;--bad:#d6293b;--warn:#b7791f;--ok:#14a56a;--blue:#2563eb}.brand .logo-w{display:none}.brand .logo-b{display:block}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif}
+button,select,input{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{max-width:1280px;margin:auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.brand img{height:20px}.brand span{color:var(--mut);font-weight:500;padding-left:12px;border-left:1px solid var(--line)}
+.sp{flex:1}
+select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer}select:hover{border-color:var(--mut)}
+main{max-width:1280px;margin:auto;padding:20px;display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:8px}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+@media(max-width:1000px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;transition:background .12s,border-color .12s,transform .05s}
+.btn:hover{border-color:var(--mut);background:color-mix(in srgb,var(--panel2) 70%,var(--fg) 8%)}.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-fg)}.btn.pri:hover{filter:brightness(1.08)}.btn.dng{border-color:var(--bad);color:var(--bad)}.btn[disabled]{opacity:.5;cursor:wait}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--panel2);padding:4px;border-radius:10px;border:1px solid var(--line)}
+.seg button{border:0;background:transparent;padding:10px 8px;border-radius:7px;cursor:pointer;font-weight:600;color:var(--mut);transition:background .12s,color .12s}
+.seg button:hover{color:var(--fg);background:color-mix(in srgb,var(--fg) 7%,transparent)}.seg button.on{background:var(--acc);color:var(--acc-fg)}.seg button.on.auto{background:var(--bad);color:#fff}
+.note{color:var(--mut);font-size:13px;margin-top:10px;min-height:38px}.banner{margin-top:10px;padding:8px 12px;border-radius:8px;background:color-mix(in srgb,var(--bad) 16%,transparent);border:1px solid var(--bad);color:var(--bad);font-weight:600;font-size:13px}
+.sw{display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer;color:var(--mut);user-select:none}.sw:hover{color:var(--fg)}
+.sw i{width:34px;height:20px;border-radius:20px;background:var(--line);position:relative;transition:background .15s;flex:none}.sw i:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.sw.on i{background:var(--acc)}.sw.on i:after{left:16px}
+.ring{display:flex;align-items:center;gap:18px}.ring svg{flex:none}.big{font-size:40px;font-weight:700;line-height:1}.mut{color:var(--mut)}.stat{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}.stat b{display:block;font-size:18px}
+table{width:100%;border-collapse:collapse}th{text-align:left;color:var(--mut);font-weight:500;font-size:12px;padding:6px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}tbody tr{transition:background .1s}tbody tr:hover{background:var(--panel2)}tr:last-child td{border-bottom:0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600;border:1px solid var(--line);white-space:nowrap}
+.chip.critical,.chip.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent);background:color-mix(in srgb,var(--bad) 12%,transparent)}.chip.high{color:#ff8a5c;border-color:#ff8a5c55}
+.chip.medium,.chip.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}.chip.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent);background:color-mix(in srgb,var(--ok) 12%,transparent)}.chip.blue{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 45%,transparent)}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}@media(max-width:700px){.steps{grid-template-columns:1fr}}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel2);transition:border-color .2s,background .2s}.step b{display:block;font-size:12px;color:var(--mut);font-weight:600}.step span{font-size:13px}
+.step.done{border-color:var(--ok)}.step.done b{color:var(--ok)}.step.bad{border-color:var(--bad)}.step.bad b{color:var(--bad)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.empty{color:var(--mut);padding:18px 4px}
+input.search{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:220px}input.search:focus{outline:2px solid color-mix(in srgb,var(--acc) 50%,transparent)}
+.scroll{max-height:420px;overflow:auto;margin:0 -6px;padding:0 6px}a{color:var(--blue)}pre{white-space:pre-wrap;margin:0;font:13px/1.55 ui-monospace,Menlo,monospace}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block}.dot.on{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
 </style></head><body>
-<header><h1>🛡 Warden</h1><select id="acct"></select><span class="pill" id="meta"></span><span style="flex:1"></span>
-<button class="p" id="rev">Ask agent to review drift</button></header>
-<div class="grid">
-<div class="card"><h2>Compliance</h2><div class="big" id="pct">–</div><div class="pill" id="sub"></div></div>
-<div class="card"><h2>Trend (requirement-level)</h2><canvas id="cv"></canvas></div>
-<div class="card" style="grid-column:1/-1"><h2>Remediation mode (runtime)</h2>
-<div id="modes" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div><div class="pill" id="modeNote" style="margin-top:8px"></div>
-<div style="margin-top:8px"><label class="pill"><input type="checkbox" id="dry"> dry-run (log what auto mode would change, change nothing)</label>
-&nbsp; <label class="pill"><input type="checkbox" id="watchOn"> live CloudTrail watch</label> <span class="pill" id="watchSt"></span></div></div>
-<div class="card" style="grid-column:1/-1"><h2>Live demo (throwaway resources tagged warden-demo)</h2>
-<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="p" id="liveStart">1. Open port 22 to the internet</button><button id="liveReset">Reset demo (delete resources)</button><span class="pill" id="liveSt"></span></div>
-<div class="pill" style="margin-top:6px">Flow: AWS change, CloudTrail event (can take a few minutes), rule hit, Prowler verifies, then PR queue or self-fix by mode.</div></div>
-<div class="card" style="grid-column:1/-1"><h2>CloudTrail detections (verified by Prowler)</h2><table id="dets"></table></div>
-<div class="card" style="grid-column:1/-1"><h2>Agent actions</h2><table id="acts"></table></div>
-<div class="card" style="grid-column:1/-1"><h2>Exploitability signals (cost + activity)</h2><table id="sigs"></table></div>
-<div class="card" style="grid-column:1/-1"><h2>Agent report</h2><pre id="rep">Click “Ask agent to review drift”.</pre></div>
-<div class="card" style="grid-column:1/-1"><h2>New failures since previous scan</h2><table id="drift"></table></div>
-<div class="card" style="grid-column:1/-1"><h2>Failing requirements</h2><table id="reqs"></table></div>
-</div>
+<header><div class="bar">
+  <div class="brand"><img class="logo-w" src="/static/prowler-logo-white.png" alt="Prowler"><img class="logo-b" src="/static/prowler-logo-black.png" alt="Prowler"><span>Warden</span></div>
+  <select id="acct" title="Account and framework"></select>
+  <span class="mut" id="watchChip" title="Live CloudTrail watcher"><i class="dot" id="dot"></i> <span id="watchTxt">watcher off</span></span>
+  <div class="sp"></div><span class="mut" id="meta"></span>
+  <button class="btn" id="refresh" title="Recompute posture now">Refresh</button>
+</div></header>
+<main>
+  <section class="card c4"><h2>Compliance</h2><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>
+    <div><div class="big" id="pct">–</div><div class="mut" id="fw"></div></div></div>
+    <div class="stat"><div><b id="sPass" class="ok" style="color:var(--ok)">–</b><span class="mut">pass</span></div><div><b id="sFail" style="color:var(--bad)">–</b><span class="mut">fail</span></div><div><b id="sNo">–</b><span class="mut">no data</span></div></div></section>
+  <section class="card c4"><h2>Remediation mode <span class="chip blue" title="Stored in ClickHouse, changes apply instantly">runtime</span></h2>
+    <div class="seg" id="seg"><button data-m="monitor" title="Alert only, change nothing">Monitor</button><button data-m="pr" title="Humans review a pull request">PR review</button><button data-m="auto" class="auto" title="Warden fixes AWS directly">Self-fix</button></div>
+    <div class="note" id="modeNote"></div><div id="banner"></div>
+    <div class="sw" id="swDry" role="switch"><i></i><span>Dry-run: log what self-fix would change</span></div>
+    <div class="sw" id="swWatch" role="switch"><i></i><span>Watch CloudTrail in real time</span></div>
+    <div class="sw" id="swPr" role="switch"><i></i><span>Open real pull requests (otherwise prepare a local branch)</span></div></section>
+  <section class="card c4"><h2>Trend</h2><svg id="trend" viewBox="0 0 300 120" width="100%" height="120" preserveAspectRatio="none"></svg><div class="mut" id="trendNote" style="margin-top:6px"></div></section>
+
+  <section class="card c12"><h2>Live demo <span class="chip">throwaway resources tagged warden-demo</span></h2>
+    <div class="row"><button class="btn pri" id="liveStart" title="Creates a throwaway security group and opens port 22 to the internet">1. Open port 22 to the internet</button>
+      <button class="btn" id="liveReset" title="Deletes the demo VPC and security group">Reset demo</button><span id="liveSt" class="mut"></span></div>
+    <div class="steps" id="steps"></div></section>
+
+  <section class="card c7"><h2>CloudTrail detections <span class="chip blue">verified by Prowler</span></h2><div class="scroll" id="dets"></div></section>
+  <section class="card c5"><h2>Agent actions</h2><div class="scroll" id="acts"></div></section>
+
+  <section class="card c7"><h2>Failing requirements</h2><div class="row" style="margin-bottom:10px"><input class="search" id="q" placeholder="Filter by id, section or check"><span class="mut" id="qn"></span></div><div class="scroll" id="reqs"></div></section>
+  <section class="card c5"><h2>Exploitability signals <span class="chip">cost + CloudTrail</span></h2><div class="scroll" id="sigs"></div></section>
+
+  <section class="card c12"><h2>Agent</h2><div class="row"><button class="btn pri" id="rev">Ask the agent to review this account</button><span class="mut" id="revSt"></span></div><pre id="rep" style="margin-top:12px"></pre></section>
+</main>
 <script>
-const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-let cur;
-async function load(){
-  const [a,f]=$('acct').value.split('|');cur={a,f};
-  const o=await (await fetch(`/api/overview?account=${a}&framework=${f}`)).json();
-  $('pct').textContent=o.score.pct+'%';$('pct').className='big '+(o.score.pct>=80?'ok':'bad');
-  $('sub').textContent=`${o.score.pass} pass / ${o.score.fail} fail of ${o.score.graded} graded requirements · ${o.score.manual} manual`;
-  $('meta').textContent=`${Number(o.rows).toLocaleString()} findings in ClickHouse · overview computed in ${o.ms} ms`;
-  $('drift').innerHTML='<tr><th>Sev</th><th>Check</th><th>Resource</th><th>Reqs</th></tr>'+o.drift.regressions.map(r=>`<tr><td class="sev-${r.severity}">${r.severity}</td><td>${esc(r.check_id)}</td><td>${esc(r.resource_uid)}</td><td>${r.reqs.join(', ')}</td></tr>`).join('')
-    +`<tr><td colspan=4 class="pill">${o.drift.resolved.length} resolved since previous scan</td></tr>`;
-  $('reqs').innerHTML='<tr><th>Req</th><th>Section</th><th>Description</th><th>Failing checks</th></tr>'+o.requirements.filter(r=>r.status=='FAIL').map(r=>`<tr><td>${esc(r.req_id)}</td><td>${esc(r.section)}</td><td>${esc(r.description)}</td><td>${r.failing_checks.map(esc).join('<br>')}</td></tr>`).join('');
-  chart(o.trend);
-}
-function chart(t){const c=$('cv'),d=devicePixelRatio||1,w=c.width=c.clientWidth*d,h=c.height=c.clientHeight*d,x=c.getContext('2d');
-  x.clearRect(0,0,w,h);if(!t.length)return;const st=getComputedStyle(document.body);
-  const pts=t.map((p,i)=>[8*d+i*(w-16*d)/Math.max(1,t.length-1),h-14*d-(p.pct/100)*(h-28*d)]);
-  x.strokeStyle=st.getPropertyValue('--acc');x.lineWidth=2*d;x.beginPath();pts.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.stroke();
-  x.fillStyle=st.getPropertyValue('--bad');const l=pts[pts.length-1];x.beginPath();x.arc(l[0],l[1],4*d,0,7);x.fill();
-  x.fillStyle=st.getPropertyValue('--mut');x.font=`${11*d}px system-ui`;x.fillText(t[0].pct+'%',4*d,12*d);x.fillText(t[t.length-1].pct+'%',w-40*d,12*d)}
-$('rev').onclick=async()=>{$('rev').disabled=true;$('rep').textContent='Agent is working…';
-  const r=await (await fetch('/api/review',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({account:cur.a,framework:cur.f})})).json();
-  $('rep').textContent=r.error?('Error: '+r.error):(`[tools: ${r.tools.join(' → ')}]\n\n`+r.report);$('rev').disabled=false};
-const MODE_NOTE={monitor:'Alert only. Nothing is changed.',pr:'Human in the loop: fixes go to a pull request for review.',auto:'SELF-FIX: Warden changes AWS directly, then re-verifies with Prowler. Checks without a safe auto-fix still go to a PR.'};
-async function loadPolicy(){const p=await (await fetch('/api/policy')).json();
-  $('modes').innerHTML=['monitor','pr','auto'].map(m=>`<button data-m="${m}" class="${p.mode==m?'p':''}">${m=='pr'?'PR review':m=='auto'?'Auto self-fix':'Monitor only'}</button>`).join('');
-  document.querySelectorAll('#modes button').forEach(b=>b.onclick=async()=>{await fetch('/api/policy',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key:'mode',value:b.dataset.m})});loadPolicy()});
-  $('modeNote').textContent=MODE_NOTE[p.mode]+(p.mode=='auto'&&!p.dry_run?'  (LIVE: dry-run is off)':'');$('modeNote').style.color=p.mode=='auto'&&!p.dry_run?'var(--bad)':'';
-  $('dry').checked=p.dry_run;$('dry').onchange=async e=>{await fetch('/api/policy',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key:'dry_run',value:e.target.checked})});loadPolicy()};
-  const w=await (await fetch('/api/watch')).json();$('watchOn').checked=w.on;$('watchSt').textContent=w.error?('error: '+w.error):(w.last?`last cycle: ${w.last.events} events, ${w.last.detections} detections`:'');
-  $('watchOn').onchange=async e=>{await fetch('/api/watch/'+e.target.checked,{method:'POST'})}}
-async function liveRefresh(){const l=await (await fetch('/api/live')).json();$('liveSt').textContent=l.sg?(l.port22_open_to_internet?`${l.sg}: port 22 OPEN to the internet`:`${l.sg}: port 22 closed`):'no demo resources';$('liveSt').style.color=l.port22_open_to_internet?'var(--bad)':'var(--ok)'}
-$('liveStart').onclick=async()=>{$('liveStart').disabled=true;await fetch('/api/live/start',{method:'POST'});$('liveStart').disabled=false;liveRefresh()};
-$('liveReset').onclick=async()=>{await fetch('/api/live/reset',{method:'POST'});liveRefresh()};
-const tag=s=>`<span class="${/violation|failed|still/.test(s)?'bad':/compliant|fixed-verified|reverted/.test(s)?'ok':''}">${esc(s)}</span>`;
-async function loadFeeds(){
-  const d=await (await fetch('/api/detections')).json(),a=await (await fetch('/api/actions')).json();
-  $('dets').innerHTML='<tr><th>Time</th><th>Sev</th><th>Event</th><th>Actor</th><th>Reqs</th><th>Prowler verdict</th></tr>'+d.map(x=>`<tr><td>${esc(x.event_time)}</td><td class="sev-${x.severity}">${x.severity}</td><td>${esc(x.title)}<br><span class="pill">${esc(x.resource)}</span></td><td>${esc(x.actor.split('/').pop())}</td><td>${x.req_ids.join(', ')}</td><td>${tag(x.status)}<br><span class="pill">${esc(x.note)}</span></td></tr>`).join('');
-  $('acts').innerHTML='<tr><th>Time</th><th>Kind</th><th>Status</th><th>Check</th><th>Resource</th><th></th></tr>'+a.map(x=>`<tr><td>${esc(x.ts)}</td><td>${x.kind}</td><td>${tag(x.status)}</td><td>${esc(x.check_id)}</td><td>${esc(x.resource_uid)}</td><td>${x.kind=='self-fix'&&x.status=='fixed-verified'?`<button onclick="fetch('/api/actions/${x.id}/revert',{method:'POST'}).then(loadFeeds)">Revert</button>`:''}</td></tr>`).join('');
-  const sg=await (await fetch(`/api/signals?account=${cur.a}&framework=${cur.f}`)).json();
-  $('sigs').innerHTML='<tr><th>Score</th><th>Verdict</th><th>Check</th><th>Evidence</th></tr>'+sg.ranked.map(x=>`<tr><td>${x.score}</td><td>${x.verdict}</td><td>${esc(x.check_id)}</td><td>${x.evidence.map(esc).join('<br>')}</td></tr>`).join('')}
-setInterval(()=>{if(cur){loadPolicy();loadFeeds();liveRefresh()}},5000);
-(async()=>{const a=(await (await fetch('/api/accounts')).json()).data;
-  $('acct').innerHTML=a.map(x=>`<option value="${x.account_id}|${x.framework}">${x.account_id} · ${x.framework}</option>`).join('');
-  $('acct').onchange=load;if(a.length){await load();loadPolicy();loadFeeds()}})();
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cache={};const put=(id,html)=>{if(cache[id]!==html){cache[id]=html;$(id).innerHTML=html}};   // skip identical renders: keeps hover/scroll/focus intact
+const J=(u,o)=>fetch(u,o).then(r=>r.json());const post=(u,b)=>J(u,{method:'POST',headers:{'content-type':'application/json'},body:b?JSON.stringify(b):undefined});
+let cur=null,reqs=[],NOTE={monitor:'Alert only. Nothing in AWS or code is changed.',pr:'Human in the loop: Warden prepares a pull request to fix it in code. Nothing in AWS changes.',auto:'Self-fix: Warden changes AWS now, re-verifies with Prowler, then opens a PR so the code matches (no drift).'};
+const chip=(t,c)=>`<span class="chip ${c||''}">${esc(t)}</span>`;const st=s=>chip(s,/violation|failed|still/.test(s)?'bad':/compliant|fixed-verified|reverted|pr-opened|pr-ready/.test(s)?'ok':/queued|proposed|dry/.test(s)?'warn':'');
+const ago=t=>{const s=(Date.now()-new Date(t+'Z'))/1000;return s<90?'just now':s<3600?Math.round(s/60)+' min ago':Math.round(s/3600)+' h ago'};
+
+async function load(){const[a,f]=$('acct').value.split('|');cur={a,f};
+  const o=await J(`/api/overview?account=${a}&framework=${f}`);const s=o.score;
+  $('pct').textContent=s.pct+'%';$('fw').textContent=f.replace(/_/g,' ');$('sPass').textContent=s.pass;$('sFail').textContent=s.fail;$('sNo').textContent=s.no_data+s.manual;
+  $('arc').style.strokeDashoffset=314*(1-s.pct/100);$('arc').style.stroke=s.pct>=80?'var(--ok)':s.pct>=50?'var(--warn)':'var(--bad)';
+  $('meta').textContent=`${Number(o.rows).toLocaleString()} findings in ClickHouse · ${o.ms} ms`;
+  reqs=o.requirements.filter(r=>r.status=='FAIL');drawReqs();drawTrend(o.trend)}
+function drawReqs(){const q=$('q').value.toLowerCase();const r=reqs.filter(x=>!q||(x.req_id+x.section+x.description+x.failing_checks.join(' ')).toLowerCase().includes(q));
+  $('qn').textContent=`${r.length} of ${reqs.length}`;
+  put('reqs',r.length?`<table><thead><tr><th>Req</th><th>Section</th><th>Failing checks</th></tr></thead><tbody>${r.map(x=>`<tr title="${esc(x.description)}"><td><b>${esc(x.req_id)}</b></td><td>${esc(x.section)}<div class="mut">${esc(x.description).slice(0,90)}</div></td><td class="mono">${x.failing_checks.map(esc).join('<br>')}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No failing requirements match.</div>')}
+function drawTrend(t){if(!t.length)return;const w=300,h=120,p=8,pts=t.map((d,i)=>[p+i*(w-2*p)/Math.max(1,t.length-1),h-p-(d.pct/100)*(h-2*p)]);
+  const path=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');const l=pts[pts.length-1];
+  put('trend',`<path d="${path} L${l[0]} ${h-p} L${pts[0][0]} ${h-p}Z" fill="var(--acc)" opacity=".12"/><path d="${path}" fill="none" stroke="var(--acc)" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${l[0]}" cy="${l[1]}" r="4" fill="var(--acc)"/>`);
+  $('trendNote').textContent=`${t.length} scan${t.length>1?'s':''} · latest ${t[t.length-1].pct}%`}
+async function feeds(){
+  const[d,a,l,sg,w]=await Promise.all([J('/api/detections'),J('/api/actions'),J('/api/live'),J(`/api/signals?account=${cur.a}&framework=${cur.f}`),J('/api/watch')]);
+  put('dets',d.length?`<table><thead><tr><th>When</th><th>Event</th><th>Reqs</th><th>Prowler verdict</th></tr></thead><tbody>${d.map(x=>`<tr><td class="mut" title="${esc(x.event_time)} UTC">${ago(x.event_time)}</td><td>${chip(x.severity,x.severity)} ${esc(x.title)}<div class="mono mut">${esc(x.resource)} · ${esc(x.actor.split('/').pop())}</div></td><td>${x.req_ids.join(', ')}</td><td>${st(x.status)}<div class="mut" style="font-size:12px;margin-top:4px">${esc(x.note).slice(0,110)}</div></td></tr>`).join('')}</tbody></table>`:'<div class="empty">No events yet. Turn on the watcher and run the demo.</div>');
+  put('acts',a.length?`<table><thead><tr><th>Kind</th><th>Status</th><th>What</th><th></th></tr></thead><tbody>${a.map(x=>{const link=/^https?:/.test(x.command||'')?`<a href="${esc(x.command)}" target="_blank" rel="noopener">PR</a>`:'';const rv=x.kind=='self-fix'&&x.status=='fixed-verified'?`<button class="btn" data-revert="${x.id}">Revert</button>`:'';
+    return `<tr><td>${chip(x.kind==='self-fix'?'AWS fix':x.kind==='pr'?'Code (PR)':x.kind)}</td><td>${st(x.status)}</td><td>${esc(x.summary).slice(0,90)}<div class="mono mut">${esc(x.check_id)}${x.command&&!link&&x.kind==='pr'?' · branch '+esc(x.command):''}</div></td><td>${link}${rv}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">No actions yet.</div>');
+  put('sigs',sg.ranked.length?`<table><thead><tr><th>Score</th><th>Verdict</th><th>Check</th></tr></thead><tbody>${sg.ranked.slice(0,10).map(x=>`<tr title="${esc(x.evidence.join('; '))}"><td><b>${x.score}</b></td><td>${chip(x.verdict,x.verdict=='likely-being-used'?'bad':x.verdict=='signal'?'warn':'')}</td><td class="mono">${esc(x.check_id)}${x.evidence.length?`<div class="mut">${x.evidence.map(esc).join('<br>')}</div>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No data.</div>');
+  $('dot').className='dot'+(w.on?' on':'');$('watchTxt').textContent=w.error?('watcher error'):w.on?(w.last?`watching · last cycle ${w.last.events} new events`:'watching'):'watcher off';
+  setSw('swWatch',w.on);
+  $('liveSt').innerHTML=l.sg?(l.port22_open_to_internet?`<span class="chip bad">${esc(l.sg)} port 22 OPEN to the internet</span>`:`<span class="chip ok">${esc(l.sg)} port 22 closed</span>`):'<span class="chip">no demo resources</span>';
+  const e=d[0],hit=e&&e.rule_id=='sg_open_22',fixed=a.find(x=>x.kind=='self-fix'&&/fixed|reverted/.test(x.status)),code=a.find(x=>x.kind=='pr'&&/pr-/.test(x.status));
+  const S=(n,t,ok,bad)=>`<div class="step ${bad?'bad':ok?'done':''}"><b>${n}</b><span>${t}</span></div>`;
+  put('steps',S('1 AWS change',l.port22_open_to_internet?'port 22 opened':(l.sg?'closed again':'not started'),l.sg,l.port22_open_to_internet)+S('2 CloudTrail',hit?'event detected':'waiting (a few min)',hit)+S('3 Prowler verify',hit?(e.status=='violation'?'violation confirmed':e.status):'pending',hit&&e.status=='compliant'||hit&&e.status=='violation',hit&&e.status=='violation')+S('4 Runtime fix',fixed?fixed.status:'pending',fixed)+S('5 Code PR',code?code.status:'pending',code))}
+function setSw(id,on){$(id).classList.toggle('on',!!on)}
+async function policy(){const p=await J('/api/policy');
+  document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m==p.mode));
+  put('modeNote',NOTE[p.mode]);put('banner',p.mode=='auto'&&!p.dry_run?'<div class="banner">LIVE: Warden will change AWS without asking.</div>':p.mode=='auto'?'<div class="note" style="color:var(--warn)">Dry-run is on: no changes are applied.</div>':'');
+  setSw('swDry',p.dry_run);setSw('swPr',p.open_pr)}
+document.addEventListener('click',async e=>{const t=e.target.closest('button,.sw,select');if(!t)return;
+  if(t.dataset.m){await post('/api/policy',{key:'mode',value:t.dataset.m});policy()}
+  else if(t.id=='swDry'){await post('/api/policy',{key:'dry_run',value:!t.classList.contains('on')});policy()}
+  else if(t.id=='swPr'){await post('/api/policy',{key:'open_pr',value:!t.classList.contains('on')});policy()}
+  else if(t.id=='swWatch'){await post('/api/watch/'+!t.classList.contains('on'));feeds()}
+  else if(t.dataset.revert){t.disabled=true;await post(`/api/actions/${t.dataset.revert}/revert`);feeds()}
+  else if(t.id=='liveStart'){t.disabled=true;t.textContent='Opening port 22…';await post('/api/live/start');t.disabled=false;t.textContent='1. Open port 22 to the internet';feeds()}
+  else if(t.id=='liveReset'){t.disabled=true;await post('/api/live/reset');t.disabled=false;feeds()}
+  else if(t.id=='refresh'){load()}
+  else if(t.id=='rev'){t.disabled=true;$('revSt').textContent='Agent is working…';$('rep').textContent='';const r=await post('/api/review',{account:cur.a,framework:cur.f});
+    $('rep').textContent=r.error?('Error: '+r.error):`[tools: ${r.tools.join(' → ')}]\n\n${r.report}`;$('revSt').textContent='';t.disabled=false}});
+$('q').oninput=drawReqs;$('acct').onchange=load;
+(async()=>{const a=(await J('/api/accounts')).data;const real=a.sort((x,y)=>(y.account_id=='552455647653')-(x.account_id=='552455647653'));
+  $('acct').innerHTML=real.map(x=>`<option value="${x.account_id}|${x.framework}">${x.account_id} · ${x.framework}</option>`).join('');
+  if(!real.length)return;await load();await policy();await feeds();
+  setInterval(()=>{policy();feeds()},4000);setInterval(load,60000)})();
 </script></body></html>

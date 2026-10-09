@@ -6,7 +6,9 @@ import re
 
 import boto3
 
-from . import db, policy
+from pathlib import Path
+
+from . import db, iac, policy
 
 
 def _sess(profile, region):
@@ -84,6 +86,19 @@ def _record(account, framework, kind, check, resource, summary, command, status)
                        column_names=["account_id", "framework", "kind", "check_id", "resource_uid", "summary", "command", "status"])
 
 
+def _code_track(pol, account, framework, chk, res, region, profile, note):
+    """Open (or prepare) a PR against the Terraform that owns the resource, so code and cloud stay in sync."""
+    if not pol["repo"]:
+        return None
+    try:
+        r = iac.fix_in_code(Path(pol["repo"]), res, chk, region, profile, note, open_pr=pol["open_pr"])
+    except Exception as e:
+        r = {"status": "error", "note": str(e)[:200]}
+    _record(account, framework, "pr", chk, res, f"code: {r.get('status')} {r.get('address', '')} {r.get('note', '')}".strip(), r.get("pr") or r.get("branch") or "",
+            {"pr-opened": "pr-opened", "branch-ready": "pr-ready"}.get(r.get("status"), r.get("status", "")))
+    return r
+
+
 def handle(v: dict, framework: str, profile: str | None) -> dict:
     """v = verified violation from cloudtrail.verify(). Applies the current policy and records evidence."""
     pol = policy.get()
@@ -114,7 +129,7 @@ def handle(v: dict, framework: str, profile: str | None) -> dict:
                 still = [r for r in rows if r[7] == "FAIL" and (res in r[8] or res in r[9])]
                 status = "fixed-verified" if not still else "fix-applied-still-failing"
                 _record(account, framework, "self-fix", chk, res, f"auto-fixed {chk}", json.dumps(undo), status)
-                out["results"].append({"check": chk, "resource": res, "action": status})
+                out["results"].append({"check": chk, "resource": res, "action": status, "code": _code_track(pol, account, framework, chk, res, region, profile, f"Runtime fix applied by Warden ({status}).")})
             except Exception as e:
                 _record(account, framework, "self-fix", chk, res, f"auto-fix failed: {e}", "", "failed")
                 out["results"].append({"check": chk, "resource": res, "action": f"failed: {e}"})
@@ -122,7 +137,8 @@ def handle(v: dict, framework: str, profile: str | None) -> dict:
         # pr mode, or auto mode without a safe auto-fix: a human reviews
         _record(account, framework, "pr", chk, res, f"{sev} {chk} needs review" + (" (no safe auto-fix)" if pol["mode"] == "auto" else ""),
                 "", "pr-queued")
-        out["results"].append({"check": chk, "resource": res, "action": "pr-queued"})
+        out["results"].append({"check": chk, "resource": res, "action": "pr-queued",
+                               "code": _code_track(pol, account, framework, chk, res, region, profile, "Detected by Warden; no runtime change was made (human review).")})
     return out
 
 

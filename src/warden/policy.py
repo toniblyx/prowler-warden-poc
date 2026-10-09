@@ -1,5 +1,6 @@
 """Runtime-configurable remediation policy, stored in ClickHouse so it can change without a restart."""
 import json
+import os
 
 from . import db
 
@@ -23,7 +24,7 @@ def get() -> dict:
         cur[r["key"]] = r["value"]
     return {"mode": cur["mode"], "dry_run": cur["dry_run"] == "true", "auto_min_severity": cur["auto_min_severity"],
             "auto_deny_checks": json.loads(cur["auto_deny_checks"]), "auto_allow_regions": json.loads(cur["auto_allow_regions"]),
-            "repo": cur["repo"], "open_pr": cur["open_pr"] == "true"}
+            "repo": cur["repo"] or os.getenv("WARDEN_REPO", ""), "open_pr": cur["open_pr"] == "true"}
 
 
 def set_(key: str, value) -> dict:
