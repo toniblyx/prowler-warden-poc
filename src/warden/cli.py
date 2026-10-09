@@ -223,3 +223,39 @@ def preflight():
         console.print(f"      demo resources: {live_demo.status()}  cost overlay: {'on' if signals.demo_active(config.ACCOUNT) else 'off'}")
     except Exception as e:
         ok(False, "demo status", str(e)[:80])
+
+
+@app.command()
+def teleprompter(port: int = 8800):
+    """Serve ONLY the teleprompter page on your Wi-Fi so a phone can show the script while you record on the laptop."""
+    import socket
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from pathlib import Path
+    static = Path(__file__).parent / "static"
+    files = {"/": ("teleprompter.html", "text/html"), "/teleprompter": ("teleprompter.html", "text/html"),
+             "/static/script.json": ("script.json", "application/json"), "/static/favicon.png": ("favicon.png", "image/png")}
+
+    class H(BaseHTTPRequestHandler):
+        def do_GET(self):  # nothing else is exposed: no dashboard, no API, no AWS controls
+            f = files.get(self.path.split("?")[0])
+            if not f:
+                self.send_error(404)
+                return
+            body = (static / f[0]).read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", f[1])
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *a):
+            pass
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+    except OSError:
+        ip = "127.0.0.1"
+    console.print(f"Teleprompter for your phone (same Wi-Fi): [bold]http://{ip}:{port}[/]   (Ctrl+C to stop)")
+    HTTPServer(("0.0.0.0", port), H).serve_forever()
