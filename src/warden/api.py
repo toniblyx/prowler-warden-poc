@@ -235,3 +235,9 @@ def timeline(account: str, framework: str):
 def simulate(account: str, framework: str):
     from . import insights
     return insights.simulate(account, framework)
+
+
+@app.get("/api/findings")
+def findings_list(account: str, framework: str):
+    from . import insights
+    return insights.open_findings(account, framework)

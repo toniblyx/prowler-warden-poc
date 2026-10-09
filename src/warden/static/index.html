@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Prowler Warden</title>
-<link rel="icon" href="/static/prowler-logo-white.png">
+<link rel="icon" type="image/png" href="/static/favicon.png"><link rel="shortcut icon" href="/static/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
 <style>
 :root{color-scheme:dark;--bg:#000;--panel:#0c0a09;--panel2:#121110;--line:#27272a;--line2:#3f3f46;--fg:#fff;--fg2:#e4e4e7;--mut:#a1a1aa;--acc:#6ee7b7;--acc2:#99f6e4;--acc-fg:#022c22;--bad:#f43f5e;--ok:#4ade80;--warn:#fb923c;--blue:#3c8dff;--crit:#ff006a;--high:#f77852;--med:#fec94d;--r:14px;--side:rgba(255,255,255,.06);--sideb:rgba(255,255,255,.11)}
@@ -58,6 +58,18 @@ input.search{background:#111;background:var(--panel2);border:1px solid var(--lin
 .scroll{max-height:440px;overflow:auto;margin:0 -8px;padding:0 8px}a{color:var(--blue)}pre{white-space:pre-wrap;margin:0;font:12.5px/1.6 "Fira Code",ui-monospace,Menlo,monospace}
 @keyframes flash{from{background:color-mix(in srgb,var(--acc) 22%,transparent)}to{background:transparent}}tr.new{animation:flash 2.4s ease-out}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block}.dot.on{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+
+.help{color:var(--mut);font-size:13px;line-height:1.5;margin:-6px 0 14px;max-width:78ch}.help b{color:var(--fg2);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mut);font-size:12px;margin-top:10px}.legend span{display:inline-flex;align-items:center;gap:6px}
+.sq{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.filters .btn{padding:4px 11px;font-size:12.5px}.filters .btn.on{border-color:var(--acc);color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.num{font-variant-numeric:tabular-nums}
+/* per-view layout so every view fills its 12 columns */
+main[data-view="compliance"] > .k-comp{grid-column:span 4}main[data-view="compliance"] > .k-time{grid-column:span 8}main[data-view="compliance"] > .k-reqs{grid-column:span 7}main[data-view="compliance"] > .k-sim{grid-column:span 5}main[data-view="compliance"] > .k-sigs{grid-column:span 12}
+main[data-view="events"] > .k-demo{grid-column:span 12}main[data-view="events"] > .k-stream{grid-column:span 12}main[data-view="events"] > .k-dets{grid-column:span 7}main[data-view="events"] > .k-acts{grid-column:span 5}main[data-view="events"] > .k-find{grid-column:span 12}
+main[data-view="remediation"] > .k-mode{grid-column:span 4}main[data-view="remediation"] > .k-sim{grid-column:span 8}main[data-view="remediation"] > .k-demo{grid-column:span 12}main[data-view="remediation"] > .k-acts{grid-column:span 12}main[data-view="remediation"] > .k-find{grid-column:span 12}
+main[data-view="cost"] > .k-cost{grid-column:span 12}main[data-view="cost"] > .k-sigs{grid-column:span 12}
+@media(max-width:1100px){main[data-view] > .card{grid-column:span 12!important}}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
 </style></head><body>
 <div class="app">
@@ -73,40 +85,43 @@ input.search{background:#111;background:var(--panel2);border:1px solid var(--lin
   <span id="watchChip" style="display:none"></span><button class="btn" id="refresh" title="Recompute posture now">Refresh</button></div>
 
 <main data-view="overview">
-  <section data-v="overview compliance" class="card c4"><h2>Compliance</h2><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>
+  <section data-v="overview compliance" class="card c4 k-comp"><h2>Compliance</h2><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>
     <div><div class="big" id="pct">–</div><div class="mut" id="fwLabel"></div></div></div>
     <div class="stat"><div><b id="sPass" class="ok" style="color:var(--ok)">–</b><span class="mut">pass</span></div><div><b id="sFail" style="color:var(--bad)">–</b><span class="mut">fail</span></div><div><b id="sNo">–</b><span class="mut">no data</span></div></div>
     <div class="note" id="cov" style="min-height:0"></div><div class="row" style="margin-top:8px"><button class="btn" id="scanFw" style="display:none">Scan this framework</button><span class="mut" id="scanSt"></span></div></section>
-  <section data-v="overview remediation" class="card c4"><h2>Remediation mode <span class="chip blue" title="Stored in ClickHouse, changes apply instantly">runtime</span></h2>
+  <section data-v="overview remediation" class="card c4 k-mode"><h2>Remediation mode <span class="chip blue" title="Stored in ClickHouse, changes apply instantly">runtime</span></h2>
     <div class="seg" id="seg"><button data-m="monitor" title="Alert only, change nothing">Monitor</button><button data-m="pr" title="Humans review a pull request">PR review</button><button data-m="auto" class="auto" title="Warden fixes AWS directly">Self-fix</button></div>
     <div class="note" id="modeNote"></div><div id="banner"></div>
     <div class="sw" id="swDry" role="switch"><i></i><span>Dry-run: log what self-fix would change</span></div>
     <div class="sw" id="swWatch" role="switch"><i></i><span>Watch CloudTrail in real time</span></div>
     <div class="sw" id="swPr" role="switch"><i></i><span>Open real pull requests (otherwise prepare a local branch)</span></div></section>
-  <section data-v="overview" class="card c4"><h2>Account</h2><div id="acctInfo"></div></section>
+  <section data-v="overview" class="card c4 k-acct"><h2>Account</h2><div class="help">Size, spend and risk of the account being protected.</div><div id="acctInfo"></div></section>
 
-  <section data-v="overview compliance" class="card c7"><h2>Posture timeline <span class="chip">annotated</span></h2><div id="timeline"></div>
-    <div class="row mut" style="font-size:12px;margin-top:6px"><span><i class="dot" style="background:var(--bad)"></i> violation detected</span><span><i class="dot" style="background:var(--ok)"></i> runtime fix</span><span><i class="dot" style="background:var(--blue)"></i> pull request</span><span><i class="dot" style="background:var(--mut)"></i> scan</span><span>dashed = what each class of fix would reach</span></div></section>
-  <section data-v="overview remediation compliance" class="card c5"><h2>Fix simulator <span class="chip blue">what if</span></h2><div id="sim"></div></section>
+  <section data-v="overview compliance" class="card c7 k-time"><h2>Posture timeline <span class="chip">annotated</span></h2><div class="help"><b>What this shows:</b> the compliance score of this account over time (green line, 0 to 100%). Each grey dot is a scan. The line only moves when a check result changes. The markers underneath are what Warden saw and did. The dashed lines on the right are projections: where the score would reach if each class of fix were applied (see the Fix simulator).</div><div id="timeline"></div>
+    <div class="legend"><span><i class="sq" style="background:var(--acc)"></i> compliance score</span><span><i class="dot" style="background:var(--mut)"></i> a scan ran</span><span><i class="dot" style="background:var(--bad)"></i> risky change detected (CloudTrail)</span><span><i class="dot" style="background:var(--ok)"></i> Warden fixed it in AWS</span><span><i class="sq" style="background:var(--blue)"></i> PR opened or prepared</span><span>dashed line = projected score after that class of fix</span></div></section>
+  <section data-v="overview remediation compliance" class="card c5 k-sim"><h2>Fix simulator <span class="chip blue">what if</span></h2><div class="help"><b>What this simulates:</b> the score if we fixed the failing checks, step by step. <b>Today</b> is the real score. <b>+ self-fix</b> adds the changes Warden can make safely in AWS by itself. <b>+ PRs to code</b> adds Terraform changes a person reviews. <b>+ human tasks</b> adds what only a person can do, such as root MFA. A requirement passes only when <b>all</b> of its failing checks are fixed. Nothing is changed by this panel.</div><div id="sim"></div></section>
 
-  <section data-v="remediation events" class="card c12"><h2>Live demo <span class="chip">throwaway resources tagged warden-demo</span></h2>
+  <section data-v="remediation events" class="card c12 k-demo"><h2>Live demo <span class="chip">throwaway resources tagged warden-demo</span></h2>
     <div class="row"><button class="btn pri" id="liveStart" title="Creates a throwaway security group and opens port 22 to the internet">1. Open port 22 to the internet</button>
       <button class="btn" id="liveReset" title="Deletes the demo VPC and security group">Reset demo</button><span id="liveSt" class="mut"></span></div>
     <div class="steps" id="steps"></div></section>
 
-  <section data-v="events" class="card c12"><h2><i class="dot on" id="evDot"></i> CloudTrail live stream <span class="chip" id="evCount">–</span>
+  <section data-v="events" class="card c12 k-stream"><h2><i class="dot on" id="evDot"></i> CloudTrail live stream <span class="chip" id="evCount">–</span>
     <span style="flex:1"></span><div class="sw" id="swWrites" style="margin:0" role="switch"><i></i><span>Only changes (hide reads)</span></div></h2>
     <div class="row" style="margin-bottom:10px"><input class="search" id="evq" placeholder="Filter by event, user, IP, service"><span class="mut" id="evN"></span></div>
     <div class="scroll" id="evs" style="max-height:380px"></div></section>
-  <section data-v="events" class="card c7"><h2>CloudTrail detections <span class="chip blue">verified by Prowler</span></h2><div class="scroll" id="dets"></div></section>
-  <section data-v="remediation events" class="card c5"><h2>Agent actions</h2><div class="scroll" id="acts"></div></section>
+  <section data-v="events" class="card c7 k-dets"><h2>CloudTrail detections <span class="chip blue">verified by Prowler</span></h2><div class="help">Risky changes seen in CloudTrail, each re-checked by Prowler. The rest of the failing findings are listed in <b>Open findings</b> below.</div><div class="scroll" id="dets"></div></section>
+  <section data-v="remediation events" class="card c5 k-acts"><h2>Agent actions <span class="chip">what Warden did</span></h2><div class="help">Every action Warden took or proposed: AWS fixes, pull requests, and review proposals. Use <b>Revert</b> to undo a self-fix.</div><div class="scroll" id="acts"></div></section>
+  <section data-v="remediation events" class="card c12 k-find"><h2>Open findings <span class="chip" id="findCount">–</span></h2>
+    <div class="help">Every failing resource in this account for the selected framework, not only the ones CloudTrail flagged. <b>How to fix</b> says what Warden can do about each: <b>self-fix</b> (safe AWS change), <b>PR</b> (Terraform change for review) or <b>human</b> (needs a person). <b>Signal</b> shows whether cost or activity suggests it is being used.</div>
+    <div class="filters" id="findFilters"></div><div class="scroll" id="finds" style="max-height:520px"></div></section>
 
-  <section data-v="compliance" class="card c7"><h2>Failing requirements</h2><div class="row" style="margin-bottom:10px"><input class="search" id="q" placeholder="Filter by id, section or check"><span class="mut" id="qn"></span></div><div class="scroll" id="reqs"></div></section>
-  <section data-v="cost" class="card c12"><h2>Cost signals <span class="chip blue">Cost Explorer</span><span class="chip warn" id="costDemoChip" style="display:none">demo overlay on</span><span style="flex:1"></span>
+  <section data-v="compliance" class="card c7 k-reqs"><h2>Failing requirements</h2><div class="row" style="margin-bottom:10px"><input class="search" id="q" placeholder="Filter by id, section or check"><span class="mut" id="qn"></span></div><div class="scroll" id="reqs"></div></section>
+  <section data-v="cost" class="card c12 k-cost"><h2>Cost signals <span class="chip blue">Cost Explorer</span><span class="chip warn" id="costDemoChip" style="display:none">demo overlay on</span><span style="flex:1"></span>
     <button class="btn" id="costDemo" title="Adds clearly-labelled synthetic spend on top of the real data">Inject demo cost spike</button></h2>
     <div class="mut" style="margin:-4px 0 12px">Spend that jumps far above its 14-day baseline is evidence that a misconfiguration is being used, not only present. Cost lags about 24 hours.</div>
-    <div id="costs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px"></div></section>
-  <section data-v="cost compliance" class="card c12"><h2>Exploitability signals <span class="chip">cost + CloudTrail</span></h2><div class="scroll" id="sigs"></div></section>
+    <div class="legend" style="margin:0 0 12px"><span><i class="sq" style="background:var(--blue)"></i> normal daily spend</span><span><i class="sq" style="background:var(--bad)"></i> latest day, anomalous</span><span><i class="sq" style="background:var(--warn)"></i> demo overlay (synthetic)</span><span><b style="color:var(--fg2)">13x baseline</b> = latest day divided by the 14-day average</span><span>red border = flagged as a spike</span></div><div id="costs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px"></div></section>
+  <section data-v="cost compliance" class="card c12 k-sigs"><h2>Exploitability signals <span class="chip">cost + CloudTrail</span></h2><div class="scroll" id="sigs"></div></section>
 
   <section data-v="agent" class="card c12"><h2>Agent</h2><div class="row"><button class="btn pri" id="rev">Ask the agent to review this account</button><span class="mut" id="revSt"></span></div><pre id="rep" style="margin-top:12px"></pre></section>
 </main>
@@ -143,7 +158,7 @@ async function feeds(){
     return `<tr><td>${chip(x.kind==='self-fix'?'AWS fix':x.kind==='pr'?'Code (PR)':x.kind)}</td><td>${st(x.status)}</td><td>${esc(x.summary).slice(0,90)}<div class="mono mut">${esc(x.check_id)}${x.command&&!link&&x.kind==='pr'?' · branch '+esc(x.command):''}</div></td><td>${link}${rv}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">No actions yet.</div>');
   put('sigs',sg.ranked.length?`<table><thead><tr><th>Score</th><th>Verdict</th><th>Check</th></tr></thead><tbody>${sg.ranked.slice(0,10).map(x=>`<tr title="${esc(x.evidence.join('; '))}"><td><b>${x.score}</b></td><td>${chip(x.verdict,x.verdict=='likely-being-used'?'bad':x.verdict=='signal'?'warn':'')}</td><td class="mono">${esc(x.check_id)}${x.evidence.length?`<div class="mut">${x.evidence.map(esc).join('<br>')}</div>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No data.</div>');
   $('dot').className='dot'+(w.on?' on':'');$('watchTxt').textContent=w.error?'watcher error':w.on?'CloudTrail watching':'watcher off';
-  setSw('swWatch',w.on);events();costs();if(!window._ins||Date.now()-window._ins>15000){window._ins=Date.now();insight()}
+  setSw('swWatch',w.on);events();costs();if(!window._ins||Date.now()-window._ins>15000){window._ins=Date.now();insight();findings()}
   $('liveSt').innerHTML=l.sg?(l.port22_open_to_internet?`<span class="chip bad">${esc(l.sg)} port 22 OPEN to the internet</span>`:`<span class="chip ok">${esc(l.sg)} port 22 closed</span>`):'<span class="chip">no demo resources</span>';
   const e=d[0],hit=e&&e.rule_id=='sg_open_22',fixed=a.find(x=>x.kind=='self-fix'&&/fixed|reverted/.test(x.status)),code=a.find(x=>x.kind=='pr'&&/pr-/.test(x.status));
   const S=(n,t,ok,bad)=>`<div class="step ${bad?'bad':ok?'done':''}"><b>${n}</b><span>${t}</span></div>`;
@@ -168,10 +183,10 @@ async function costs(){const c=await J('/api/cost?account='+cur.a);$('costDemoCh
 const R={auto:['self-fix','ok'],pr:['PR','blue'],manual:['human','warn']};let simFilter='all';
 async function insight(){const[a,t,m]=await Promise.all([J(`/api/account?account=${cur.a}&framework=${cur.f}`),J(`/api/timeline?account=${cur.a}&framework=${cur.f}`),J(`/api/simulate?account=${cur.a}&framework=${cur.f}`)]);
   const sv=a.failing_by_severity,mx=Math.max(...a.by_service.map(x=>x.resources),1);
-  put('acctInfo',`<div style="display:flex;gap:18px;flex-wrap:wrap"><div><div class="big" style="font-size:26px">${a.resources}</div><span class="mut">resources</span></div><div><div class="big" style="font-size:26px">$${a.cost_30d??'–'}</div><span class="mut">30-day cost</span></div><div><div class="big" style="font-size:26px">${a.changes_hour}</div><span class="mut">changes / hour</span></div></div>
+  put('acctInfo',`<div style="display:flex;gap:18px;flex-wrap:wrap"><div><div class="big" style="font-size:26px">${a.resources}</div><span class="mut" title="Distinct resources Prowler evaluated">resources scanned</span></div><div><div class="big" style="font-size:26px">$${a.cost_30d??'–'}</div><span class="mut" title="AWS spend over the last 30 days, from Cost Explorer">cost, last 30 days</span></div><div><div class="big" style="font-size:26px">${a.changes_hour}</div><span class="mut" title="Non-read CloudTrail API calls in the last hour">config changes / hour</span></div></div>
     <div style="margin:12px 0 4px" class="row">${['critical','high','medium','low'].filter(k=>sv[k]).map(k=>chip(sv[k]+' '+k,k)).join('')}</div>
     <div style="margin-top:10px">${a.by_service.slice(0,6).map(x=>`<div title="${x.failing} of ${x.resources} resources have failing checks" style="display:grid;grid-template-columns:78px 1fr 40px;gap:8px;align-items:center;margin:4px 0;font-size:12px"><span class="mut">${esc(x.service)}</span><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div style="width:${100*x.resources/mx}%;height:100%;background:var(--blue);position:relative"><div style="position:absolute;inset:0 auto 0 0;width:${100*x.failing/x.resources}%;background:var(--bad)"></div></div></div><span class="mono">${x.resources}</span></div>`).join('')}</div>
-    <div class="mut" style="font-size:12px;margin-top:8px">Top spend: ${a.top_services.map(x=>esc(x.service.replace('Amazon ','').replace('AWS ',''))+' $'+x.amt).join(' · ')}<br>Last scan: ${a.last_scan?new Date(a.last_scan).toLocaleString():'never'} · ${a.scans} full scan${a.scans==1?'':'s'}</div>`);
+    <div class="legend" style="display:grid;gap:4px"><span><i class="sq" style="background:var(--blue)"></i> bar = resources in that service</span><span><i class="sq" style="background:var(--bad)"></i> red part = resources with a failing check</span><span>colored chips = failing findings by severity</span></div><div class="mut" style="font-size:12px;margin-top:8px">Top spend: ${a.top_services.map(x=>esc(x.service.replace('Amazon ','').replace('AWS ',''))+' $'+x.amt).join(' · ')}<br>Last scan: ${a.last_scan?new Date(a.last_scan).toLocaleString():'never'} · ${a.scans} full scan${a.scans==1?'':'s'}</div>`);
   // timeline
   const P=t.points,M=t.marks,W=640,H=230,L=34,Rr=130,T=14,B=30,now=Date.now();const ts=[...P.map(p=>+new Date(p.t)),...M.map(m=>+new Date(m.t))];const t0=Math.min(...ts,now-3600e3),t1=now;
   const X=v=>L+(v-t0)/(t1-t0||1)*(W-L-Rr),Y=p=>T+(100-p)/100*(H-T-B);let g='';
@@ -189,7 +204,16 @@ async function insight(){const[a,t,m]=await Promise.all([J(`/api/account?account
   const sc=m.scenarios,plan=m.plan.filter(p=>simFilter=='all'||p.route==simFilter);
   put('sim',`${sc.map((x,i)=>`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:12.5px"><b>${esc(x.label)}</b><span><b>${x.pct}%</b> <span class="mut">${x.fixed?'· '+x.fixed+' requirements fixed':''}</span></span></div><div style="height:9px;background:var(--line);border-radius:5px;overflow:hidden"><div style="width:${x.pct}%;height:100%;background:${['var(--mut)','var(--ok)','var(--blue)','var(--warn)'][i]};transition:width .5s"></div></div></div>`).join('')}
     <div class="row" style="margin:12px 0 6px">${['all','auto','pr','manual'].map(k=>`<button class="btn" data-sf="${k}" style="padding:3px 10px;${simFilter==k?'border-color:var(--acc);color:var(--acc)':''}">${k=='all'?'All':R[k][0]}</button>`).join('')}</div>
-    <div class="scroll" style="max-height:230px"><table><tbody>${plan.slice(0,14).map(p=>`<tr title="${esc(p.requirements.join(', '))}"><td>${chip(R[p.route][0],R[p.route][1])}</td><td><b>${esc(p.title)}</b><div class="mut" style="font-size:12px">${esc(p.effect)}</div></td><td class="mono" title="resources affected">${p.resources}</td><td title="requirements this single fix completes">${p.unlocks?chip('+'+p.unlocks,'ok'):''}</td></tr>`).join('')}</tbody></table></div>`)}
+    <div class="scroll" style="max-height:260px"><table><thead><tr><th>Fix type</th><th>What would change</th><th title="Resources with this failure">Res.</th><th title="Requirements this fix completes on its own">Done</th></tr></thead><tbody>${plan.slice(0,14).map(p=>`<tr title="${esc(p.requirements.join(', '))}"><td>${chip(R[p.route][0],R[p.route][1])}</td><td><b>${esc(p.title)}</b><div class="mut" style="font-size:12px">${esc(p.effect)}</div></td><td class="mono" title="resources affected">${p.resources}</td><td title="requirements this single fix completes">${p.unlocks?chip('+'+p.unlocks,'ok'):''}</td></tr>`).join('')}</tbody></table></div>`)}
+let FIND=[],fSev='all',fRoute='all';
+async function findings(){FIND=await J(`/api/findings?account=${cur.a}&framework=${cur.f}`);drawFind()}
+function drawFind(){const q=($('fq')?$('fq').value:'').toLowerCase();
+  const rows=FIND.filter(x=>(fSev=='all'||x.severity==fSev)&&(fRoute=='all'||x.route==fRoute)&&(!q||(x.title+x.check_id+x.resource+x.reqs.join(' ')).toLowerCase().includes(q)));
+  $('findCount').textContent=`${rows.length} of ${FIND.length}`;
+  const b=(k,l,cur_,attr)=>`<button class="btn ${cur_==k?'on':''}" data-${attr}="${k}">${l}</button>`;
+  put('findFilters',['all','critical','high','medium','low'].map(k=>b(k,k=='all'?'All severities':k,fSev,'fsev')).join('')+'<span class="mut">|</span>'+[['all','Any fix'],['auto','self-fix'],['pr','PR'],['manual','human']].map(([k,l])=>b(k,l,fRoute,'froute')).join('')+`<input class="search" id="fq" placeholder="Filter by finding, resource or requirement" value="${esc(q)}">`);
+  const R2={auto:['self-fix','ok'],pr:['PR','blue'],manual:['human','warn']};
+  put('finds',rows.length?`<table><thead><tr><th>Severity</th><th>Finding</th><th>Resource</th><th>Reqs</th><th>How to fix</th><th>Signal</th></tr></thead><tbody>${rows.map(x=>`<tr title="${esc(x.check_id)}"><td>${chip(x.severity,x.severity)}</td><td><b>${esc(x.title)}</b>${x.seen_in_cloudtrail?' '+chip('seen in CloudTrail','bad'):''}<div class="mono mut">${esc(x.check_id)}</div></td><td class="mono">${esc(x.resource.split('/').slice(-1)[0]||x.resource.split(':').slice(-1)[0])}<div class="mut">${esc(x.region)}</div></td><td class="num">${x.reqs.join(', ')}</td><td>${chip(R2[x.route][0],R2[x.route][1])}<div class="mut" style="font-size:12px;margin-top:3px">${esc(x.effect||'')}</div></td><td>${chip(x.verdict,x.verdict=='likely-being-used'?'bad':x.verdict=='signal'?'warn':'')}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No findings match these filters.</div>')}
 function setSw(id,on){$(id).classList.toggle('on',!!on)}
 async function policy(){const p=await J('/api/policy');
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m==p.mode));
@@ -205,6 +229,8 @@ document.addEventListener('click',async e=>{const nv=e.target.closest('nav butto
   else if(t.dataset.revert){t.disabled=true;await post(`/api/actions/${t.dataset.revert}/revert`);feeds()}
   else if(t.id=='liveStart'){t.disabled=true;t.textContent='Opening port 22…';await post('/api/live/start');t.disabled=false;t.textContent='1. Open port 22 to the internet';feeds()}
   else if(t.id=='liveReset'){t.disabled=true;await post('/api/live/reset');t.disabled=false;feeds()}
+  else if(t.dataset.fsev){fSev=t.dataset.fsev;cache.findFilters=null;cache.finds=null;drawFind()}
+  else if(t.dataset.froute){fRoute=t.dataset.froute;cache.findFilters=null;cache.finds=null;drawFind()}
   else if(t.dataset.sf){simFilter=t.dataset.sf;cache.sim=null;insight()}
   else if(t.id=='refresh'){load()}
   else if(t.id=='costDemo'){t.disabled=true;await post(`/api/demo/cost/${t.dataset.on!=='1'}?account=${cur.a}`);t.disabled=false;cache.costs=null;cache.sigs=null;costs();feeds()}
@@ -212,7 +238,7 @@ document.addEventListener('click',async e=>{const nv=e.target.closest('nav butto
   else if(t.id=='scanFw'){t.disabled=true;await post('/api/scan',{account:cur.a,framework:cur.f});load()}
   else if(t.id=='rev'){t.disabled=true;$('revSt').textContent='Agent is working…';$('rep').textContent='';const r=await post('/api/review',{account:cur.a,framework:cur.f});
     $('rep').textContent=r.error?('Error: '+r.error):`[tools: ${r.tools.join(' → ')}]\n\n${r.report}`;$('revSt').textContent='';t.disabled=false}});
-$('q').oninput=drawReqs;$('evq').oninput=()=>{cache.evs=null;events()};$('acct').onchange=async()=>{await loadFw();load()};$('fw').onchange=()=>{cache.dets=null;cache.sigs=null;load();feeds()};
+$('q').oninput=drawReqs;document.addEventListener('input',e=>{if(e.target.id=='fq'){cache.finds=null;drawFind()}});$('evq').oninput=()=>{cache.evs=null;events()};$('acct').onchange=async()=>{await loadFw();load()};$('fw').onchange=()=>{cache.dets=null;cache.sigs=null;load();feeds()};
 (async()=>{const h=location.hash.slice(1);if(VIEWS[h])view(h);const a=(await J('/api/accounts')).data;const ids=[...new Set(a.map(x=>x.account_id))];
   $('acct').innerHTML=ids.map(x=>`<option value="${x}">${x}</option>`).join('');if(!ids.length)return;
   await loadFw();await load();await policy();await feeds();

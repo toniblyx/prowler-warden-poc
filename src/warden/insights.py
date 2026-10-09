@@ -130,3 +130,28 @@ EFFECT = {
     "ec2_ebs_default_encryption": "Encrypt new EBS volumes by default (existing volumes unchanged)",
     "rds_instance_no_public_access": "Set PubliclyAccessible=false (undo recorded)",
 }
+
+
+def open_findings(account: str, framework: str, limit: int = 400) -> list[dict]:
+    """Every failing resource from the newest result of each check, with how it can be fixed and any exploitability evidence."""
+    from . import signals
+    rows = db.query("""
+    SELECT check_id, resource_uid, region, any(severity) AS severity, any(service) AS service, any(status_extended) AS detail
+    FROM findings WHERE account_id={a:String} AND status = 'FAIL'
+      AND (check_id, scan_time) IN (SELECT check_id, max(scan_time) FROM findings WHERE account_id={a:String} GROUP BY check_id)
+      AND check_id IN (SELECT check_id FROM framework_map WHERE framework={f:String})
+    GROUP BY check_id, resource_uid, region""", {"a": account, "f": framework})
+    reqs = {}
+    for r in db.query("SELECT check_id, groupUniqArray(req_id) AS reqs FROM framework_map WHERE framework={f:String} GROUP BY check_id", {"f": framework}):
+        reqs[r["check_id"]] = sorted(r["reqs"])
+    verdict = {p["check_id"]: p for p in signals.prioritize(account, framework, 500)}
+    flagged = {d["resource"] for d in db.query("SELECT resource FROM detections FINAL WHERE account_id={a:String} AND status = 'violation'", {"a": account}) if d["resource"]}
+    out = []
+    for r in rows:
+        v = verdict.get(r["check_id"], {})
+        out.append({"check_id": r["check_id"], "title": frameworks.check_metadata(r["check_id"]).get("CheckTitle", r["check_id"]), "severity": r["severity"],
+                    "service": r["service"], "resource": r["resource_uid"], "region": r["region"], "reqs": reqs.get(r["check_id"], []),
+                    "route": route(r["check_id"]), "effect": EFFECT.get(r["check_id"], ""), "verdict": v.get("verdict", "misconfigured-only"), "evidence": v.get("evidence", []),
+                    "seen_in_cloudtrail": any(f and f in r["resource_uid"] for f in flagged)})
+    out.sort(key=lambda x: (SEV_ORDER.index(x["severity"]) if x["severity"] in SEV_ORDER else 9, {"auto": 0, "pr": 1, "manual": 2}[x["route"]], x["check_id"]))
+    return out[:limit]
