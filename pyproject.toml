@@ -1,5 +1,5 @@
 [project]
-name = "warden"
+name = "prowler-warden"
 version = "0.1.0"
 description = "Always-on AWS compliance agent built on Prowler OSS + ClickHouse"
 requires-python = ">=3.12,<3.13"
@@ -13,6 +13,7 @@ dependencies = [
 ]
 [project.scripts]
 warden = "warden.cli:app"
+prowler-warden = "warden.cli:app"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

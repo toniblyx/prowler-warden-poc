@@ -1,4 +1,4 @@
-# Warden — an always-on AWS compliance agent
+# Prowler Warden — an always-on AWS compliance agent
 
 Warden keeps an AWS account continuously compliant with a chosen framework (CIS, PCI, HIPAA, NIST, SOC2, ...).
 **Prowler OSS** scans and supplies the framework mappings, check metadata and remediations. **ClickHouse** stores every
