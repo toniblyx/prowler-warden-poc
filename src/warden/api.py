@@ -241,3 +241,8 @@ def simulate(account: str, framework: str):
 def findings_list(account: str, framework: str):
     from . import insights
     return insights.open_findings(account, framework)
+
+
+@app.get("/teleprompter")
+def teleprompter():
+    return FileResponse(STATIC / "teleprompter.html")

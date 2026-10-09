@@ -11,6 +11,15 @@ CloudTrail delivers events a few minutes late, so the live change is started **b
 6. Open in tabs: the dashboard (`#overview`), the deck, the Slack channel `alert-demo-prowler`, the demo repo's pull requests, the status page.
 7. Confirm the five-step tracker under **Remediation** shows runtime fix and code PR done before you press record.
 
+## Recording with the autopilot (recommended)
+Narration timing and screen switching are driven by `src/warden/static/script.json`, so you only narrate.
+1. Run `prowler-warden serve --port 8799`. Open **http://localhost:8799/teleprompter** on a second screen or window that is **not** recorded.
+2. Open the dashboard in the recorded window and the deck in another tab. Open the Slack channel and the status page in two more tabs.
+3. Start Screen Studio. Press **Space** on the teleprompter to start the 3:00 clock, and read the slides from the deck (the teleprompter tells you when to change slide).
+4. At **0:48**, switch to the dashboard tab and click **Start demo** (top right). The dashboard then changes view, scrolls and highlights the right panel on its own, with a small cue box (add `?hud=0` to the URL to hide it).
+5. At **2:15** and **2:25** the teleprompter says "Switch tab": go to Slack, then to the status page. At **2:45** return to the dashboard.
+6. **Esc** stops the autopilot. **R** resets the teleprompter.
+
 ## Timing rules
 - **Hard cap 3:00 for everything**: 3 slides (0:48) plus the live demo (2:12). Aim to finish at 2:50.
 - Narration is about 270 words, roughly 110 seconds at a normal pace, so the rest of each slot is screen time. Do not add words.

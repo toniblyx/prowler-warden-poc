@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prowler Warden Teleprompter</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@500&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#000;--panel:#0c0a09;--line:#27272a;--fg:#fff;--mut:#a1a1aa;--acc:#6ee7b7;--bad:#f43f5e;--warn:#fb923c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.4 Inter,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+header{display:flex;gap:16px;align-items:center;padding:14px 28px;border-bottom:1px solid var(--line)}header b{font-size:15px;color:var(--mut);font-weight:600}.sp{flex:1}
+#clock{font:500 44px "Fira Code",monospace;font-variant-numeric:tabular-nums}#clock.warn{color:var(--warn)}#clock.over{color:var(--bad)}
+button{background:transparent;color:var(--fg);border:1px solid #3f3f46;border-radius:10px;padding:8px 16px;font:inherit;font-weight:600;cursor:pointer}button:hover{border-color:var(--mut)}button.pri{background:var(--acc);border-color:var(--acc);color:#022c22}
+.bar{height:6px;background:var(--line)}.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s linear}
+main{flex:1;display:grid;grid-template-columns:1fr 340px;gap:0;min-height:0}
+.now{padding:36px 48px;display:flex;flex-direction:column;gap:18px;justify-content:center}.tag{font-size:15px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.now h1{margin:0;font-size:28px;color:var(--mut);font-weight:600}.say{font-size:clamp(30px,3.6vw,54px);line-height:1.25;font-weight:600;text-wrap:balance}.cue{font-size:24px;color:var(--warn)}
+.next{margin-top:12px;padding-top:16px;border-top:1px solid var(--line);color:var(--mut);font-size:20px}.next b{color:var(--fg)}
+aside{border-left:1px solid var(--line);overflow:auto;padding:12px 0}aside div{padding:10px 20px;border-bottom:1px solid var(--line);font-size:14px;color:var(--mut)}aside div.on{background:#0f2a22;color:var(--fg)}aside div.done{opacity:.45}aside b{display:block;color:var(--fg);font-size:14px}
+.hint{padding:8px 28px;color:var(--mut);font-size:13px;border-top:1px solid var(--line)}
+@media(max-width:900px){main{grid-template-columns:1fr}aside{display:none}}
+</style></head><body>
+<header><b>PROWLER WARDEN · TELEPROMPTER</b><span class="sp"></span><span id="clock">0:00</span><button class="pri" id="go">Start (Space)</button><button id="reset">Reset (R)</button></header>
+<div class="bar"><i id="prog"></i></div>
+<main><section class="now"><div class="tag" id="kind">Ready</div><h1 id="title">Press Space to start the 3:00 clock</h1><div class="say" id="say"></div><div class="cue" id="cue"></div><div class="next" id="next"></div></section>
+<aside id="list"></aside></main>
+<div class="hint">Space start or pause · R reset · The clock turns orange at 2:50 and red at 3:00. Keep this window off the recorded screen.</div>
+<script>
+let S=null,t0=0,run=false,acc=0,raf=0;const $=id=>document.getElementById(id);
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+fetch('/static/script.json').then(r=>r.json()).then(j=>{S=j;$('list').innerHTML=S.steps.filter(x=>x.kind!='end').map((x,i)=>`<div id="s${i}"><b>${fmt(x.t)} ${x.title}</b></div>`).join('');draw(0)});
+function elapsed(){return acc+(run?(performance.now()-t0)/1000:0)}
+function draw(e){if(!S)return;const st=S.steps;let i=0;for(let k=0;k<st.length;k++)if(e>=st[k].t)i=k;const cur=st[i],nx=st[i+1];
+ $('clock').textContent=fmt(e);$('clock').className=e>=S.total?'over':e>=S.total-10?'warn':'';$('prog').style.width=Math.min(100,100*e/S.total)+'%';
+ if(!run&&e===0){return}
+ $('kind').textContent=cur.kind=='slide'?'Slide':cur.kind=='dash'?'Dashboard':cur.kind=='tab'?'Switch tab':'Done';$('title').textContent=cur.title;$('say').textContent=cur.say;
+ $('cue').textContent=cur.kind=='dash'?'On screen: '+cur.title.replace('Dashboard: ',''):cur.kind=='tab'?cur.title:'';
+ $('next').innerHTML=nx?`Next at <b>${fmt(nx.t)}</b>: ${nx.title}`:'';
+ st.forEach((x,k)=>{const el=$('s'+k);if(el)el.className=k==i?'on':k<i?'done':''});}
+function tick(){draw(elapsed());clearInterval(raf);raf=setInterval(()=>draw(elapsed()),200)}
+function toggle(){if(!S)return;if(run){acc=elapsed();run=false;clearInterval(raf);$('go').textContent='Resume (Space)'}else{t0=performance.now();run=true;$('go').textContent='Pause (Space)';tick()}}
+function reset(){run=false;acc=0;clearInterval(raf);$('go').textContent='Start (Space)';$('kind').textContent='Ready';$('title').textContent='Press Space to start the 3:00 clock';$('say').textContent='';$('cue').textContent='';$('next').textContent='';draw(0);document.querySelectorAll('aside div').forEach(d=>d.className='')}
+$('go').onclick=toggle;$('reset').onclick=reset;addEventListener('keydown',e=>{if(e.code=='Space'){e.preventDefault();toggle()}if(e.key=='r'||e.key=='R')reset()});
+</script></body></html>

@@ -70,6 +70,11 @@ main[data-view="events"] > .k-demo{grid-column:span 12}main[data-view="events"] 
 main[data-view="remediation"] > .k-mode{grid-column:span 4}main[data-view="remediation"] > .k-sim{grid-column:span 8}main[data-view="remediation"] > .k-demo{grid-column:span 12}main[data-view="remediation"] > .k-acts{grid-column:span 12}main[data-view="remediation"] > .k-find{grid-column:span 12}
 main[data-view="cost"] > .k-cost{grid-column:span 12}main[data-view="cost"] > .k-sigs{grid-column:span 12}
 @media(max-width:1100px){main[data-view] > .card{grid-column:span 12!important}}
+.card{scroll-margin-top:96px}.spot{outline:2px solid var(--acc);outline-offset:4px;transition:outline-color .4s}
+#hud{position:fixed;right:20px;bottom:20px;z-index:30;width:400px;max-width:calc(100vw - 40px);background:rgba(12,10,9,.95);border:1px solid var(--line2);border-radius:14px;padding:14px 16px;display:none;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#hud.on{display:block}#hud .t{display:flex;align-items:center;gap:10px}#hud .clk{font:500 22px "Fira Code",monospace;font-variant-numeric:tabular-nums}#hud .ttl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+#hud .say{margin-top:8px;font-size:15px;line-height:1.45;color:var(--fg2)}#hud .nx{margin-top:8px;font-size:12px;color:var(--mut)}#hud .tab{color:var(--warn);font-weight:600}#hud .bar{height:4px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden}#hud .bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s linear}
+body.nohud #hud{display:none!important}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
 </style></head><body>
 <div class="app">
@@ -82,7 +87,7 @@ main[data-view="cost"] > .k-cost{grid-column:span 12}main[data-view="cost"] > .k
 <div class="content">
 <div class="topbar"><div class="crumb"><span id="crumb">Overview</span><small id="crumbSub">Posture, spend and activity for this account</small></div><div class="sp"></div>
   <select id="acct" title="AWS account"></select><select id="fw" title="Compliance framework" style="max-width:340px"></select>
-  <span id="watchChip" style="display:none"></span><button class="btn" id="refresh" title="Recompute posture now">Refresh</button></div>
+  <span id="watchChip" style="display:none"></span><button class="btn pri" id="demoBtn" title="Run the 3-minute demo tour. Esc stops it.">Start demo</button><button class="btn" id="refresh" title="Recompute posture now">Refresh</button></div>
 
 <main data-view="overview">
   <section data-v="overview compliance" class="card c4 k-comp"><h2>Compliance</h2><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>
@@ -126,6 +131,7 @@ main[data-view="cost"] > .k-cost{grid-column:span 12}main[data-view="cost"] > .k
   <section data-v="agent" class="card c12"><h2>Agent</h2><div class="row"><button class="btn pri" id="rev">Ask the agent to review this account</button><span class="mut" id="revSt"></span></div><pre id="rep" style="margin-top:12px"></pre></section>
 </main>
 </div></div>
+<div id="hud"><div class="t"><span class="clk" id="hClk">0:48</span><span class="ttl" id="hTtl">Demo</span><span style="flex:1"></span><button class="btn" id="hStop" style="padding:3px 10px;font-size:12px">Stop (Esc)</button></div><div class="say" id="hSay"></div><div class="nx" id="hNx"></div><div class="bar"><i id="hBar"></i></div></div>
 <script>
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cache={};const put=(id,html)=>{if(cache[id]!==html){cache[id]=html;$(id).innerHTML=html}};   // skip identical renders: keeps hover/scroll/focus intact
@@ -243,4 +249,19 @@ $('q').oninput=drawReqs;document.addEventListener('input',e=>{if(e.target.id=='f
   $('acct').innerHTML=ids.map(x=>`<option value="${x}">${x}</option>`).join('');if(!ids.length)return;
   await loadFw();await load();await policy();await feeds();
   setInterval(()=>{policy();feeds()},4000);setInterval(load,60000)})();
+
+/* ---- demo autopilot: drives the dashboard on the script's timeline (the slides are shown separately) ---- */
+let DEMO=null;const fmtT=x=>Math.floor(x/60)+':'+String(Math.floor(x%60)).padStart(2,'0');
+if(/[?&]hud=0/.test(location.search))document.body.classList.add('nohud');
+async function demoStart(){if(DEMO)return demoStop();const sc=await (await fetch('/static/script.json')).json();const base=sc.dashboardStart;
+  const steps=sc.steps.filter(x=>x.t>=base&&x.kind!='end');DEMO={timers:[],t0:Date.now(),sc,base,steps};
+  $('hud').classList.add('on');$('demoBtn').textContent='Stop demo';
+  steps.forEach((st,i)=>DEMO.timers.push(setTimeout(()=>demoStep(st,steps[i+1]),(st.t-base)*1000)));
+  DEMO.timers.push(setTimeout(demoStop,(sc.total-base)*1000));
+  DEMO.tick=setInterval(()=>{const e=base+(Date.now()-DEMO.t0)/1000;$('hClk').textContent=fmtT(e);$('hBar').style.width=Math.min(100,100*(e-base)/(sc.total-base))+'%'},250);}
+function demoStep(st,nx){$('hTtl').textContent=st.title;$('hSay').innerHTML=st.kind=='tab'?'<span class="tab">'+st.title+'</span><br>'+esc(st.say):esc(st.say);
+  $('hNx').textContent=nx?('Next at '+fmtT(nx.t)+': '+nx.title):'';
+  if(st.kind=='dash'){view(st.view);setTimeout(()=>{const el=document.querySelector(st.target);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});document.querySelectorAll('.spot').forEach(x=>x.classList.remove('spot'));el.classList.add('spot');setTimeout(()=>el.classList.remove('spot'),3500)}},350)}}
+function demoStop(){if(!DEMO)return;DEMO.timers.forEach(clearTimeout);clearInterval(DEMO.tick);DEMO=null;$('hud').classList.remove('on');$('demoBtn').textContent='Start demo';document.querySelectorAll('.spot').forEach(x=>x.classList.remove('spot'))}
+$('demoBtn').onclick=demoStart;$('hStop').onclick=demoStop;addEventListener('keydown',e=>{if(e.key=='Escape')demoStop()});
 </script></body></html>

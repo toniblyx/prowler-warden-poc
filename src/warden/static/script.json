@@ -1,0 +1,20 @@
+{
+  "total": 180,
+  "dashboardStart": 48,
+  "steps": [
+    { "t": 0,   "kind": "slide", "title": "Slide 1: Cover", "say": "Prowler Warden is the agent that keeps your cloud secure and compliant, autonomously." },
+    { "t": 8,   "kind": "slide", "title": "Slide 2: Problem and solution", "say": "Compliance is a snapshot. Scans go stale, console fixes never reach Terraform so the next apply undoes them, and every finding looks equally urgent. Warden detects, decides what is actually being used, fixes in AWS and in code, and proves it. One runtime switch picks self-fix or human PR review." },
+    { "t": 30,  "kind": "slide", "title": "Slide 3: Architecture", "say": "Prowler scans, CloudTrail and Cost Explorer feed ClickHouse. Rules and a Claude agent decide. Actions are real: an AWS fix, a Semgrep-gated PR, a Slack alert from an agent hosted on Guild.ai, and a public status page." },
+    { "t": 48,  "kind": "dash", "view": "overview", "target": ".k-comp", "title": "Dashboard: Overview", "say": "Real account, CIS 5.0: 28.8 percent. The simulator shows the path: self-fix gets 34.6, pull requests to code 84.6, and only people can finish the last 15 percent, like root MFA." },
+    { "t": 58,  "kind": "dash", "view": "overview", "target": ".k-sim", "title": "Dashboard: Fix simulator", "say": "(let the simulator bars sit on screen)" },
+    { "t": 70,  "kind": "dash", "view": "cost", "target": ".k-cost", "title": "Dashboard: Cost and signals", "say": "Compliance says what is misconfigured. Cost says what is being used. EC2 spend is 13x its baseline, so open-to-internet findings in EC2 now rank as likely being used." },
+    { "t": 85,  "kind": "dash", "view": "events", "target": ".k-stream", "title": "Dashboard: Live events", "say": "This is CloudTrail, live. Six minutes ago someone opened SSH to the internet on a test group." },
+    { "t": 95,  "kind": "dash", "view": "events", "target": ".k-dets", "title": "Dashboard: Detections", "say": "Prowler re-checked it and confirmed the violation." },
+    { "t": 107, "kind": "dash", "view": "remediation", "target": ".k-demo", "title": "Dashboard: Remediation", "say": "Self-fix mode closed the port in AWS and Prowler verified it. It also opened a pull request that removes the same rule from Terraform, so the next apply cannot reopen it. (click the PR link)" },
+    { "t": 125, "kind": "dash", "view": "remediation", "target": ".k-acts", "title": "Dashboard: Agent actions", "say": "(point at the AWS fix and the PR in the action log)" },
+    { "t": 135, "kind": "tab", "title": "Switch to the Slack tab", "say": "The Guild.ai agent posted the alert to Slack." },
+    { "t": 145, "kind": "tab", "title": "Switch to the status page tab", "say": "And Warden published a redacted status page with a SHA-256 over the evidence, so anyone can verify it was not edited." },
+    { "t": 165, "kind": "dash", "view": "overview", "target": ".k-comp", "title": "Dashboard: close", "say": "Three sponsor tools in the loop: ClickHouse, Guild.ai and Semgrep. Click Revert to undo, or Reset demo to run it again." },
+    { "t": 180, "kind": "end", "title": "End", "say": "" }
+  ]
+}
