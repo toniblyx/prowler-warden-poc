@@ -1,6 +1,6 @@
 {
   "name": "@guildai/toni~warden-alerts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Guild.ai",
   "type": "module",
   "exports": {
@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "@guildai/agents-sdk": "*",
-    "zod": "~4.3.0"
+    "zod": "~4.3.0",
+    "@guildai-services/guildai~slack": "*"
   },
   "files": [
     "./dist"

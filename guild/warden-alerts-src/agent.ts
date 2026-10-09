@@ -1,20 +1,8 @@
 // Warden alert formatter: receives an action payload from Prowler Warden
 // (API trigger) and posts one concise alert to Slack.
-import { guildServiceTool, llmAgent } from "@guildai/agents-sdk";
+import { llmAgent, pick } from "@guildai/agents-sdk";
+import { slackTools } from "@guildai-services/guildai~slack";
 import { z } from "zod";
-
-const slack_chat_post_message = guildServiceTool("slack", {
-  description: "Post a message to a Slack channel (mrkdwn supported).",
-  inputSchema: z.object({
-    channel: z.string().describe("Channel ID or #name"),
-    text: z.string().describe("Message text in Slack mrkdwn"),
-  }),
-  outputSchema: z.object({
-    ok: z.boolean(),
-    ts: z.string().optional(),
-    error: z.string().optional(),
-  }),
-});
 
 const systemPrompt = `
 You are the Prowler Warden alert bot. You receive ONE structured event describing
@@ -68,6 +56,6 @@ pr_url: {{pr_url}}
 mode: {{mode}}
 framework: {{framework}}
 requirements: {{requirements}}`,
-  tools: { slack_chat_post_message },
+  tools: { ...pick(slackTools, ["slack_chat_post_message"]) },
   systemPrompt,
 });

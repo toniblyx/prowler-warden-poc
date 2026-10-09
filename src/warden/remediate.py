@@ -8,7 +8,7 @@ import boto3
 
 from pathlib import Path
 
-from . import db, iac, policy
+from . import db, frameworks, iac, policy
 
 
 def _sess(profile, region):
@@ -98,7 +98,7 @@ def _notify(account, framework, kind, check, resource, summary, command, status)
         from . import notify
         pol = policy.get()
         pr_url = command if kind == "pr" and str(command).startswith("http") else None
-        notify.send_action({"action_kind": kind, "severity": "", "check_id": check, "resource": resource,
+        notify.send_action({"action_kind": kind, "severity": frameworks.check_metadata(check).get("Severity", ""), "check_id": check, "resource": resource,
                             "account": account, "summary": summary, "status": status, "pr_url": pr_url,
                             "mode": pol.get("mode", ""), "framework": framework})
     except Exception:
