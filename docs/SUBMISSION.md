@@ -5,10 +5,10 @@
 | GitHub repository with reviewer access | **TODO**: push this folder (`prowler-warden`) and add reviewers. The demo infra repo is `toniblyx/prowler-warden-demo-infra` (private). |
 | Demo video (3 minutes max) | **TODO**: record with `docs/DEMO_SCRIPT.md`, upload, paste the share link here. |
 | Documentation of what was built and tools used | `README.md`, this file, `docs/DEMO_SCRIPT.md` |
-| Team names and contact emails | **TODO**: fill in below. |
+| Team names and contact emails | Toni de la Fuente, toni@prowler.com (solo) |
 | Optional: screenshot and working site | Status page artifact: https://claude.ai/artifact/4cfjMwart2nHzW8RUj2yPR (private until shared). Pitch deck: https://claude.ai/artifact/LrNFBC7AvzMKme6EycHF36 |
 
-**Team:** Toni de la Fuente (toni@prowler.com) [add others]
+**Team:** Toni de la Fuente (toni@prowler.com), solo entry
 
 ## Challenge fit
 - **Preserve what matters**: continuous compliance posture, and the evidence for it (verified fixes, hash-stamped status page).
