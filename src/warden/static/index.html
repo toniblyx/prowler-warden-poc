@@ -63,7 +63,11 @@ input.search{background:var(--panel2);border:1px solid var(--line);border-radius
     <div class="sw" id="swDry" role="switch"><i></i><span>Dry-run: log what self-fix would change</span></div>
     <div class="sw" id="swWatch" role="switch"><i></i><span>Watch CloudTrail in real time</span></div>
     <div class="sw" id="swPr" role="switch"><i></i><span>Open real pull requests (otherwise prepare a local branch)</span></div></section>
-  <section class="card c4"><h2>Trend</h2><svg id="trend" viewBox="0 0 300 120" width="100%" height="120" preserveAspectRatio="none"></svg><div class="mut" id="trendNote" style="margin-top:6px"></div></section>
+  <section class="card c4"><h2>Account</h2><div id="acctInfo"></div></section>
+
+  <section class="card c7"><h2>Posture timeline <span class="chip">annotated</span></h2><div id="timeline"></div>
+    <div class="row mut" style="font-size:12px;margin-top:6px"><span><i class="dot" style="background:var(--bad)"></i> violation detected</span><span><i class="dot" style="background:var(--ok)"></i> runtime fix</span><span><i class="dot" style="background:var(--blue)"></i> pull request</span><span><i class="dot" style="background:var(--mut)"></i> scan</span><span>dashed = what each class of fix would reach</span></div></section>
+  <section class="card c5"><h2>Fix simulator <span class="chip blue">what if</span></h2><div id="sim"></div></section>
 
   <section class="card c12"><h2>Live demo <span class="chip">throwaway resources tagged warden-demo</span></h2>
     <div class="row"><button class="btn pri" id="liveStart" title="Creates a throwaway security group and opens port 22 to the internet">1. Open port 22 to the internet</button>
@@ -99,7 +103,7 @@ async function load(){const a=$('acct').value,f=$('fw').value;cur={a,f};
   $('pct').textContent=s.pct+'%';$('fwLabel').textContent=($('fw').selectedOptions[0]?$('fw').selectedOptions[0].text.split(' · ')[0]:f);$('sPass').textContent=s.pass;$('sFail').textContent=s.fail;$('sNo').textContent=s.no_data+s.manual;
   $('arc').style.strokeDashoffset=314*(1-s.pct/100);$('arc').style.stroke=s.pct>=80?'var(--ok)':s.pct>=50?'var(--warn)':'var(--bad)';
   $('meta').textContent=`${Number(o.rows).toLocaleString()} findings in ClickHouse · ${o.ms} ms`;
-  reqs=o.requirements.filter(r=>r.status=='FAIL');drawReqs();drawTrend(o.trend);
+  reqs=o.requirements.filter(r=>r.status=='FAIL');drawReqs();0;
   const c=o.coverage,pc=c.total?Math.round(100*c.scanned/c.total):0;$('cov').textContent=c.total?`Coverage: ${c.scanned} of ${c.total} automated checks have results (${pc}%). Requirements with no results are not graded.`:'';
   const j=o.job,run=j&&j.status=='running';$('scanFw').style.display=pc<100?'':'none';$('scanFw').disabled=!!run;$('scanFw').textContent=run?'Scanning…':'Scan this framework';
   $('scanSt').textContent=run?'Prowler is running, usually 2-5 minutes. The page updates when done.':(j&&j.status=='error'?'Scan failed: '+j.error:'');
@@ -111,10 +115,6 @@ async function loadFw(){const a=$('acct').value,keep=$('fw').value||'cis_5.0_aws
 function drawReqs(){const q=$('q').value.toLowerCase();const r=reqs.filter(x=>!q||(x.req_id+x.section+x.description+x.failing_checks.join(' ')).toLowerCase().includes(q));
   $('qn').textContent=`${r.length} of ${reqs.length}`;
   put('reqs',r.length?`<table><thead><tr><th>Req</th><th>Section</th><th>Failing checks</th></tr></thead><tbody>${r.map(x=>`<tr title="${esc(x.description)}"><td><b>${esc(x.req_id)}</b></td><td>${esc(x.section)}<div class="mut">${esc(x.description).slice(0,90)}</div></td><td class="mono">${x.failing_checks.map(esc).join('<br>')}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No failing requirements match.</div>')}
-function drawTrend(t){if(!t.length)return;const w=300,h=120,p=8,pts=t.map((d,i)=>[p+i*(w-2*p)/Math.max(1,t.length-1),h-p-(d.pct/100)*(h-2*p)]);
-  const path=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');const l=pts[pts.length-1];
-  put('trend',`<path d="${path} L${l[0]} ${h-p} L${pts[0][0]} ${h-p}Z" fill="var(--acc)" opacity=".12"/><path d="${path}" fill="none" stroke="var(--acc)" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${l[0]}" cy="${l[1]}" r="4" fill="var(--acc)"/>`);
-  $('trendNote').textContent=`${t.length} scan${t.length>1?'s':''} · latest ${t[t.length-1].pct}%`}
 async function feeds(){
   const[d,a,l,sg,w]=await Promise.all([J('/api/detections?framework='+cur.f),J('/api/actions'),J('/api/live'),J(`/api/signals?account=${cur.a}&framework=${cur.f}`),J('/api/watch')]);
   put('dets',d.length?`<table><thead><tr><th>When</th><th>Event</th><th>Reqs</th><th>Prowler verdict</th></tr></thead><tbody>${d.map(x=>`<tr><td class="mut" title="${esc(x.event_time)} UTC">${ago(x.event_time)}</td><td>${chip(x.severity,x.severity)} ${esc(x.title)}<div class="mono mut">${esc(x.resource)} · ${esc(x.actor.split('/').pop())}</div></td><td>${x.req_ids.join(', ')}</td><td>${st(x.status)}<div class="mut" style="font-size:12px;margin-top:4px">${esc(x.note).slice(0,110)}</div></td></tr>`).join('')}</tbody></table>`:'<div class="empty">No events yet. Turn on the watcher and run the demo.</div>');
@@ -122,7 +122,7 @@ async function feeds(){
     return `<tr><td>${chip(x.kind==='self-fix'?'AWS fix':x.kind==='pr'?'Code (PR)':x.kind)}</td><td>${st(x.status)}</td><td>${esc(x.summary).slice(0,90)}<div class="mono mut">${esc(x.check_id)}${x.command&&!link&&x.kind==='pr'?' · branch '+esc(x.command):''}</div></td><td>${link}${rv}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">No actions yet.</div>');
   put('sigs',sg.ranked.length?`<table><thead><tr><th>Score</th><th>Verdict</th><th>Check</th></tr></thead><tbody>${sg.ranked.slice(0,10).map(x=>`<tr title="${esc(x.evidence.join('; '))}"><td><b>${x.score}</b></td><td>${chip(x.verdict,x.verdict=='likely-being-used'?'bad':x.verdict=='signal'?'warn':'')}</td><td class="mono">${esc(x.check_id)}${x.evidence.length?`<div class="mut">${x.evidence.map(esc).join('<br>')}</div>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No data.</div>');
   $('dot').className='dot'+(w.on?' on':'');$('watchTxt').textContent=w.error?('watcher error'):w.on?(w.last?`watching · last cycle ${w.last.events} new events`:'watching'):'watcher off';
-  setSw('swWatch',w.on);events();costs();
+  setSw('swWatch',w.on);events();costs();if(!window._ins||Date.now()-window._ins>15000){window._ins=Date.now();insight()}
   $('liveSt').innerHTML=l.sg?(l.port22_open_to_internet?`<span class="chip bad">${esc(l.sg)} port 22 OPEN to the internet</span>`:`<span class="chip ok">${esc(l.sg)} port 22 closed</span>`):'<span class="chip">no demo resources</span>';
   const e=d[0],hit=e&&e.rule_id=='sg_open_22',fixed=a.find(x=>x.kind=='self-fix'&&/fixed|reverted/.test(x.status)),code=a.find(x=>x.kind=='pr'&&/pr-/.test(x.status));
   const S=(n,t,ok,bad)=>`<div class="step ${bad?'bad':ok?'done':''}"><b>${n}</b><span>${t}</span></div>`;
@@ -144,6 +144,31 @@ async function costs(){const c=await J('/api/cost?account='+cur.a);$('costDemoCh
     const bars=x.days.map((d,i)=>`<rect x="${i*w+.6}" y="${40-(d.amount/mx)*38}" width="${w-1.2}" height="${Math.max(1,(d.amount/mx)*38)}" rx="1" fill="${d.demo>0?'var(--warn)':hot&&i==x.days.length-1?'var(--bad)':'var(--blue)'}" opacity="${i==x.days.length-1?1:.7}"><title>${d.day}: $${d.amount}${d.demo>0?' (includes demo $'+d.demo+')':''}</title></rect>`).join('');
     const a=c.anomalies.find(a=>a.service==x.service&&a.region==x.region);
     return `<div style="border:1px solid ${hot?'var(--bad)':'var(--line)'};border-radius:10px;padding:12px;background:var(--panel2)"><div style="font-size:12px" class="mut">${esc(x.service)} · ${esc(x.region)}</div><div style="font-size:22px;font-weight:700">$${x.latest.toFixed(2)}<span class="mut" style="font-size:12px;font-weight:400"> today · base $${x.base}/day</span></div><svg viewBox="0 0 100 42" width="100%" height="48" preserveAspectRatio="none">${bars}</svg>${a?chip(a.ratio+'x baseline','bad'):chip('normal','ok')}</div>`}).join('')||'<div class="empty">No cost data. Run: warden costs ACCOUNT</div>')}
+const R={auto:['self-fix','ok'],pr:['PR','blue'],manual:['human','warn']};let simFilter='all';
+async function insight(){const[a,t,m]=await Promise.all([J(`/api/account?account=${cur.a}&framework=${cur.f}`),J(`/api/timeline?account=${cur.a}&framework=${cur.f}`),J(`/api/simulate?account=${cur.a}&framework=${cur.f}`)]);
+  const sv=a.failing_by_severity,mx=Math.max(...a.by_service.map(x=>x.resources),1);
+  put('acctInfo',`<div style="display:flex;gap:18px;flex-wrap:wrap"><div><div class="big" style="font-size:26px">${a.resources}</div><span class="mut">resources</span></div><div><div class="big" style="font-size:26px">$${a.cost_30d??'–'}</div><span class="mut">30-day cost</span></div><div><div class="big" style="font-size:26px">${a.changes_hour}</div><span class="mut">changes / hour</span></div></div>
+    <div style="margin:12px 0 4px" class="row">${['critical','high','medium','low'].filter(k=>sv[k]).map(k=>chip(sv[k]+' '+k,k)).join('')}</div>
+    <div style="margin-top:10px">${a.by_service.slice(0,6).map(x=>`<div title="${x.failing} of ${x.resources} resources have failing checks" style="display:grid;grid-template-columns:78px 1fr 40px;gap:8px;align-items:center;margin:4px 0;font-size:12px"><span class="mut">${esc(x.service)}</span><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div style="width:${100*x.resources/mx}%;height:100%;background:var(--blue);position:relative"><div style="position:absolute;inset:0 auto 0 0;width:${100*x.failing/x.resources}%;background:var(--bad)"></div></div></div><span class="mono">${x.resources}</span></div>`).join('')}</div>
+    <div class="mut" style="font-size:12px;margin-top:8px">Top spend: ${a.top_services.map(x=>esc(x.service.replace('Amazon ','').replace('AWS ',''))+' $'+x.amt).join(' · ')}<br>Last scan: ${a.last_scan?new Date(a.last_scan).toLocaleString():'never'} · ${a.scans} full scan${a.scans==1?'':'s'}</div>`);
+  // timeline
+  const P=t.points,M=t.marks,W=640,H=230,L=34,Rr=130,T=14,B=30,now=Date.now();const ts=[...P.map(p=>+new Date(p.t)),...M.map(m=>+new Date(m.t))];const t0=Math.min(...ts,now-3600e3),t1=now;
+  const X=v=>L+(v-t0)/(t1-t0||1)*(W-L-Rr),Y=p=>T+(100-p)/100*(H-T-B);let g='';
+  [0,25,50,75,100].forEach(v=>g+=`<line x1="${L}" x2="${W-Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" fill="var(--mut)" font-size="10">${v}%</text>`);
+  for(let k=0;k<=4;k++){const v=t0+(t1-t0)*k/4;g+=`<text x="${X(v)}" y="${H-10}" text-anchor="middle" fill="var(--mut)" font-size="10">${new Date(v).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:false})}</text>`}
+  if(P.length){let d='';P.forEach((p,i)=>{d+=(i?` H${X(+new Date(p.t))} V${Y(p.pct)}`:`M${X(+new Date(p.t))} ${Y(p.pct)}`)});d+=` H${X(t1)}`;
+    g+=`<path d="${d}" fill="none" stroke="var(--acc)" stroke-width="2.4" stroke-linejoin="round"/>`;
+    P.forEach(p=>g+=`<circle class="mk" cx="${X(+new Date(p.t))}" cy="${Y(p.pct)}" r="3.5" fill="var(--mut)"><title>Scan ${new Date(p.t).toLocaleTimeString()}: ${p.pct}% of ${p.graded} graded requirements</title></circle>`)}
+  const cur0=P.length?P[P.length-1].pct:0;t.projection.slice(1).forEach(sc=>{const y=Y(sc.pct),col=sc.key=='auto'?'var(--ok)':sc.key=='pr'?'var(--blue)':'var(--warn)';
+    g+=`<line x1="${X(t1)}" x2="${W-Rr+8}" y1="${Y(cur0)}" y2="${y}" stroke="${col}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${W-Rr+12}" y="${y+4}" fill="${col}" font-size="11"><title>${sc.fixed} requirements fixed</title>${esc(sc.label)} ${sc.pct}%</text>`});
+  const yb=Y(0)-8;M.forEach(m=>{const x=X(+new Date(m.t)),c=m.kind=='detection'?'var(--bad)':m.kind=='fix'?'var(--ok)':'var(--blue)',yy=m.kind=='detection'?yb:m.kind=='fix'?yb-14:yb-28;
+    g+=`<g class="mk"><line x1="${x}" x2="${x}" y1="${yy}" y2="${Y(0)}" stroke="${c}" stroke-width="1" opacity=".45"/>${m.kind=='pr'?`<rect x="${x-4}" y="${yy-4}" width="8" height="8" fill="${c}"/>`:`<circle cx="${x}" cy="${yy}" r="4.5" fill="${c}"/>`}<title>${esc(new Date(m.t).toLocaleTimeString()+' · '+m.label)}</title></g>`});
+  put('timeline',`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg><div class="mut" style="font-size:12px">${P.length} scan point${P.length==1?'':'s'}: the line moves only when a check result changes. Markers show what Warden detected and did.</div>`);
+  // simulator
+  const sc=m.scenarios,plan=m.plan.filter(p=>simFilter=='all'||p.route==simFilter);
+  put('sim',`${sc.map((x,i)=>`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:12.5px"><b>${esc(x.label)}</b><span><b>${x.pct}%</b> <span class="mut">${x.fixed?'· '+x.fixed+' requirements fixed':''}</span></span></div><div style="height:9px;background:var(--line);border-radius:5px;overflow:hidden"><div style="width:${x.pct}%;height:100%;background:${['var(--mut)','var(--ok)','var(--blue)','var(--warn)'][i]};transition:width .5s"></div></div></div>`).join('')}
+    <div class="row" style="margin:12px 0 6px">${['all','auto','pr','manual'].map(k=>`<button class="btn" data-sf="${k}" style="padding:3px 10px;${simFilter==k?'border-color:var(--acc);color:var(--acc)':''}">${k=='all'?'All':R[k][0]}</button>`).join('')}</div>
+    <div class="scroll" style="max-height:230px"><table><tbody>${plan.slice(0,14).map(p=>`<tr title="${esc(p.requirements.join(', '))}"><td>${chip(R[p.route][0],R[p.route][1])}</td><td><b>${esc(p.title)}</b><div class="mut" style="font-size:12px">${esc(p.effect)}</div></td><td class="mono" title="resources affected">${p.resources}</td><td title="requirements this single fix completes">${p.unlocks?chip('+'+p.unlocks,'ok'):''}</td></tr>`).join('')}</tbody></table></div>`)}
 function setSw(id,on){$(id).classList.toggle('on',!!on)}
 async function policy(){const p=await J('/api/policy');
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m==p.mode));
@@ -157,6 +182,7 @@ document.addEventListener('click',async e=>{const t=e.target.closest('button,.sw
   else if(t.dataset.revert){t.disabled=true;await post(`/api/actions/${t.dataset.revert}/revert`);feeds()}
   else if(t.id=='liveStart'){t.disabled=true;t.textContent='Opening port 22…';await post('/api/live/start');t.disabled=false;t.textContent='1. Open port 22 to the internet';feeds()}
   else if(t.id=='liveReset'){t.disabled=true;await post('/api/live/reset');t.disabled=false;feeds()}
+  else if(t.dataset.sf){simFilter=t.dataset.sf;cache.sim=null;insight()}
   else if(t.id=='refresh'){load()}
   else if(t.id=='costDemo'){t.disabled=true;await post(`/api/demo/cost/${t.dataset.on!=='1'}?account=${cur.a}`);t.disabled=false;cache.costs=null;cache.sigs=null;costs();feeds()}
   else if(t.id=='swWrites'){t.classList.toggle('on');cache.evs=null;events()}

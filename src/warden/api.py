@@ -214,3 +214,21 @@ def cost(account: str):
 @app.post("/api/demo/cost/{on}")
 def cost_demo(on: bool, account: str):
     return signals.demo_spike(account, on)
+
+
+@app.get("/api/account")
+def account_info(account: str, framework: str):
+    from . import insights
+    return insights.account_summary(account, framework)
+
+
+@app.get("/api/timeline")
+def timeline(account: str, framework: str):
+    from . import insights
+    return insights.timeline(account, framework)
+
+
+@app.get("/api/simulate")
+def simulate(account: str, framework: str):
+    from . import insights
+    return insights.simulate(account, framework)
