@@ -36,7 +36,7 @@ Narration timing and screen switching are driven by `src/warden/static/script.js
 | 0:48 | Dashboard, **Overview** | "Real account, CIS 5.0: 28.8%. The simulator shows the path: self-fix gets 34.6, pull requests to code 84.6, and only people can finish the last 15 percent, like root MFA." |
 | 1:10 | **Cost & signals** | "Compliance says what is misconfigured. Cost says what is being used. EC2 spend is 13x its baseline, so open-to-internet findings in EC2 now rank as likely being used." |
 | 1:25 | **Real-time** | "This is Prowler real-time. I just opened SSH to the internet on a test group. The API call reaches Prowler through EventBridge in seconds." Point at the detection row: "Prowler ran a targeted check on that resource and confirmed the violation." |
-| 1:50 | **Remediation**, five-step tracker | "Self-fix mode closed the port in AWS and Prowler verified it. It also opened a pull request that removes the same rule from Terraform, so the next apply cannot reopen it." Click the PR link. |
+| 1:52 | **Remediation**, five-step tracker | "Self-fix mode closed the port in AWS and Prowler verified it. It also opened a pull request that removes the same rule from Terraform, so the next apply cannot reopen it." Click the PR link. |
 | 2:15 | Slack channel | "The Guild.ai agent posted the alert to Slack." |
 | 2:25 | Status page | "And Warden published a redacted status page with a SHA-256 over the evidence, so anyone can verify it was not edited." |
 | 2:45 | Dashboard | "Three sponsor tools in the loop: ClickHouse, Guild.ai and Semgrep. Click Revert to undo, or Reset demo to run it again." |

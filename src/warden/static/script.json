@@ -63,7 +63,7 @@
       "say": "Prowler ran a targeted check on that exact resource and confirmed the violation."
     },
     {
-      "t": 110,
+      "t": 112,
       "kind": "dash",
       "view": "remediation",
       "target": ".k-demo",
@@ -71,7 +71,7 @@
       "say": "Self-fix mode closed the port in AWS and Prowler verified it. It also opened a pull request that removes the same rule from Terraform, so the next apply cannot reopen it. (click the PR link)"
     },
     {
-      "t": 125,
+      "t": 127,
       "kind": "dash",
       "view": "remediation",
       "target": ".k-acts",
