@@ -18,6 +18,13 @@ canvas{width:100%;height:140px}
 <div class="grid">
 <div class="card"><h2>Compliance</h2><div class="big" id="pct">–</div><div class="pill" id="sub"></div></div>
 <div class="card"><h2>Trend (requirement-level)</h2><canvas id="cv"></canvas></div>
+<div class="card" style="grid-column:1/-1"><h2>Remediation mode (runtime)</h2>
+<div id="modes" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div><div class="pill" id="modeNote" style="margin-top:8px"></div>
+<div style="margin-top:8px"><label class="pill"><input type="checkbox" id="dry"> dry-run (log what auto mode would change, change nothing)</label>
+&nbsp; <label class="pill"><input type="checkbox" id="watchOn"> live CloudTrail watch</label> <span class="pill" id="watchSt"></span></div></div>
+<div class="card" style="grid-column:1/-1"><h2>CloudTrail detections (verified by Prowler)</h2><table id="dets"></table></div>
+<div class="card" style="grid-column:1/-1"><h2>Agent actions</h2><table id="acts"></table></div>
+<div class="card" style="grid-column:1/-1"><h2>Exploitability signals (cost + activity)</h2><table id="sigs"></table></div>
 <div class="card" style="grid-column:1/-1"><h2>Agent report</h2><pre id="rep">Click “Ask agent to review drift”.</pre></div>
 <div class="card" style="grid-column:1/-1"><h2>New failures since previous scan</h2><table id="drift"></table></div>
 <div class="card" style="grid-column:1/-1"><h2>Failing requirements</h2><table id="reqs"></table></div>
@@ -45,7 +52,23 @@ function chart(t){const c=$('cv'),d=devicePixelRatio||1,w=c.width=c.clientWidth*
 $('rev').onclick=async()=>{$('rev').disabled=true;$('rep').textContent='Agent is working…';
   const r=await (await fetch('/api/review',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({account:cur.a,framework:cur.f})})).json();
   $('rep').textContent=r.error?('Error: '+r.error):(`[tools: ${r.tools.join(' → ')}]\n\n`+r.report);$('rev').disabled=false};
+const MODE_NOTE={monitor:'Alert only. Nothing is changed.',pr:'Human in the loop: fixes go to a pull request for review.',auto:'SELF-FIX: Warden changes AWS directly, then re-verifies with Prowler. Checks without a safe auto-fix still go to a PR.'};
+async function loadPolicy(){const p=await (await fetch('/api/policy')).json();
+  $('modes').innerHTML=['monitor','pr','auto'].map(m=>`<button data-m="${m}" class="${p.mode==m?'p':''}">${m=='pr'?'PR review':m=='auto'?'Auto self-fix':'Monitor only'}</button>`).join('');
+  document.querySelectorAll('#modes button').forEach(b=>b.onclick=async()=>{await fetch('/api/policy',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key:'mode',value:b.dataset.m})});loadPolicy()});
+  $('modeNote').textContent=MODE_NOTE[p.mode]+(p.mode=='auto'&&!p.dry_run?'  (LIVE: dry-run is off)':'');$('modeNote').style.color=p.mode=='auto'&&!p.dry_run?'var(--bad)':'';
+  $('dry').checked=p.dry_run;$('dry').onchange=async e=>{await fetch('/api/policy',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key:'dry_run',value:e.target.checked})});loadPolicy()};
+  const w=await (await fetch('/api/watch')).json();$('watchOn').checked=w.on;$('watchSt').textContent=w.error?('error: '+w.error):(w.last?`last cycle: ${w.last.events} events, ${w.last.detections} detections`:'');
+  $('watchOn').onchange=async e=>{await fetch('/api/watch/'+e.target.checked,{method:'POST'})}}
+const tag=s=>`<span class="${/violation|failed|still/.test(s)?'bad':/compliant|fixed-verified|reverted/.test(s)?'ok':''}">${esc(s)}</span>`;
+async function loadFeeds(){
+  const d=await (await fetch('/api/detections')).json(),a=await (await fetch('/api/actions')).json();
+  $('dets').innerHTML='<tr><th>Time</th><th>Sev</th><th>Event</th><th>Actor</th><th>Reqs</th><th>Prowler verdict</th></tr>'+d.map(x=>`<tr><td>${esc(x.event_time)}</td><td class="sev-${x.severity}">${x.severity}</td><td>${esc(x.title)}<br><span class="pill">${esc(x.resource)}</span></td><td>${esc(x.actor.split('/').pop())}</td><td>${x.req_ids.join(', ')}</td><td>${tag(x.status)}<br><span class="pill">${esc(x.note)}</span></td></tr>`).join('');
+  $('acts').innerHTML='<tr><th>Time</th><th>Kind</th><th>Status</th><th>Check</th><th>Resource</th></tr>'+a.map(x=>`<tr><td>${esc(x.ts)}</td><td>${x.kind}</td><td>${tag(x.status)}</td><td>${esc(x.check_id)}</td><td>${esc(x.resource_uid)}</td></tr>`).join('');
+  const sg=await (await fetch(`/api/signals?account=${cur.a}&framework=${cur.f}`)).json();
+  $('sigs').innerHTML='<tr><th>Score</th><th>Verdict</th><th>Check</th><th>Evidence</th></tr>'+sg.ranked.map(x=>`<tr><td>${x.score}</td><td>${x.verdict}</td><td>${esc(x.check_id)}</td><td>${x.evidence.map(esc).join('<br>')}</td></tr>`).join('')}
+setInterval(()=>{if(cur){loadPolicy();loadFeeds()}},5000);
 (async()=>{const a=(await (await fetch('/api/accounts')).json()).data;
   $('acct').innerHTML=a.map(x=>`<option value="${x.account_id}|${x.framework}">${x.account_id} · ${x.framework}</option>`).join('');
-  $('acct').onchange=load;if(a.length)load()})();
+  $('acct').onchange=load;if(a.length){await load();loadPolicy();loadFeeds()}})();
 </script></body></html>

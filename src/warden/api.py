@@ -1,3 +1,5 @@
+import os
+import threading
 import time
 from pathlib import Path
 
@@ -5,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from . import agent, compliance, db, policy
+from . import agent, cloudtrail, compliance, db, policy, signals
 
 app = FastAPI(title="Warden")
 STATIC = Path(__file__).parent / "static"
@@ -75,3 +77,48 @@ def set_policy(p: PolicySet):
         return policy.set_(p.key, p.value)
     except ValueError as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
+
+
+@app.get("/api/detections")
+def detections():
+    return db.query("SELECT id, event_time, severity, rule_id, title, actor, resource, region, req_ids, status, note "
+                    "FROM detections FINAL ORDER BY event_time DESC LIMIT 25")
+
+
+@app.get("/api/actions")
+def actions():
+    return db.query("SELECT toString(id) AS id, ts, kind, status, check_id, resource_uid, summary FROM actions FINAL ORDER BY ts DESC LIMIT 25")
+
+
+@app.get("/api/signals")
+def get_signals(account: str, framework: str):
+    return {"anomalies": signals.cost_anomalies(account), "ranked": signals.prioritize(account, framework, 10)}
+
+
+WATCH = {"on": False, "last": None, "error": None}
+
+
+def _watch_loop():
+    while True:
+        if WATCH["on"]:
+            try:
+                WATCH["last"] = cloudtrail.cycle(os.getenv("WARDEN_ACCOUNT", ""), os.getenv("WARDEN_FRAMEWORK", "cis_5.0_aws"),
+                                                 os.getenv("WARDEN_PROFILE") or None, os.getenv("WARDEN_REGION", "us-east-1"))
+                WATCH["error"] = None
+            except Exception as e:
+                WATCH["error"] = str(e)[:200]
+        time.sleep(20)
+
+
+threading.Thread(target=_watch_loop, daemon=True).start()
+
+
+@app.get("/api/watch")
+def watch_state():
+    return WATCH
+
+
+@app.post("/api/watch/{on}")
+def watch_set(on: bool):
+    WATCH["on"] = on
+    return WATCH
