@@ -11,6 +11,13 @@ CloudTrail delivers events a few minutes late, so the live change is started **b
 6. Open in tabs: the dashboard (`#overview`), the deck, the Slack channel `alert-demo-prowler`, the demo repo's pull requests, the status page.
 7. Confirm the five-step tracker under **Remediation** shows runtime fix and code PR done before you press record.
 
+## Timing rules
+- **Hard cap 3:00 for everything**: 4 slides (0:58) plus the live demo (2:02). Aim to finish at 2:50.
+- Narration is about 275 words, roughly 110 seconds at a normal pace, so the rest of each slot is screen time. Do not add words.
+- Record with a visible timer. If you are more than 5 seconds behind at 1:18, drop the **Cost & signals** segment (15 s).
+- Cut order if still long: Cost & signals (15 s), then the Status page line (10 s), then the Slack screen (keep one sentence).
+- Never cut: the cover line, the detection to fix to PR chain, and the closing sponsor line.
+
 ## Timeline
 | Time | On screen | Say |
 |---|---|---|
