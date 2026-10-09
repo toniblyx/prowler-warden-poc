@@ -89,3 +89,12 @@ def scan(framework: str, profile: str | None = None, regions: list[str] | None =
     path = run_prowler(framework, profile, regions, checks)
     sid = uuid.uuid4().hex[:12]
     return ingest(parse_ocsf(path, sid), framework, "prowler-live")
+
+
+def ensure_frameworks():
+    """Load every Prowler AWS framework into framework_map once (skips ones already present)."""
+    c = db.init()
+    have = {r[0] for r in c.query("SELECT DISTINCT framework FROM framework_map").result_rows}
+    for f in frameworks.list_frameworks():
+        if f not in have:
+            c.insert("framework_map", frameworks.rows(f), column_names=["framework", "req_id", "section", "description", "check_id", "manual"])

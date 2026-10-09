@@ -99,8 +99,9 @@ def poll(account: str, profile: str | None, region: str = "us-east-1", since_min
 def cycle(account: str, framework: str, profile: str | None, region: str = "us-east-1", verify_hits: bool = True) -> dict:
     evs = poll(account, profile, region)
     if evs:
-        seen = {r["event_id"] for r in db.query("SELECT event_id FROM cloudtrail_events WHERE event_id IN {ids:Array(String)}",
-                                                {"ids": [e["event_id"] for e in evs]})}
+        seen, ids = set(), [e["event_id"] for e in evs]
+        for i in range(0, len(ids), 500):  # keep URL parameters small: ClickHouse rejects very large single fields
+            seen |= {r["event_id"] for r in db.query("SELECT event_id FROM cloudtrail_events WHERE event_id IN {ids:Array(String)}", {"ids": ids[i:i + 500]})}
         evs = [e for e in evs if e["event_id"] not in seen]
     store(evs)
     dets = detect(evs, framework)

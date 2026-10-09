@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import agent, cloudtrail, compliance, db, policy, signals
+from . import agent, cloudtrail, compliance, db, frameworks, policy, runner, signals
 
 app = FastAPI(title="Warden")
 STATIC = Path(__file__).parent / "static"
@@ -34,8 +34,9 @@ def accounts():
 @app.get("/api/overview")
 def overview(account: str, framework: str):
     t = time.perf_counter()
-    reqs = compliance.requirements(account, framework)
-    out = {"score": compliance.score(reqs), "requirements": reqs, "trend": compliance.trend(account, framework),
+    reqs = compliance.posture(account, framework)
+    cov = compliance.coverage(account).get(framework, {"total": 0, "scanned": 0})
+    out = {"coverage": cov, "job": JOBS.get((account, framework)), "score": compliance.score(reqs), "requirements": reqs, "trend": compliance.trend(account, framework),
            "drift": compliance.drift(account, framework, 50), "top": compliance.top_failing_checks(account, framework),
            "rows": db.query("SELECT count() AS n FROM findings")[0]["n"]}
     out["ms"] = round((time.perf_counter() - t) * 1000, 1)
@@ -82,9 +83,14 @@ def set_policy(p: PolicySet):
 
 
 @app.get("/api/detections")
-def detections():
-    return db.query("SELECT id, event_time, severity, rule_id, title, actor, resource, region, req_ids, status, note "
+def detections(framework: str = ""):
+    rows = db.query("SELECT id, event_time, severity, rule_id, title, actor, resource, region, req_ids, check_ids, status, note "
                     "FROM detections FINAL ORDER BY event_time DESC LIMIT 25")
+    if framework:  # requirements are derived for the framework selected in the UI, not the one active at detection time
+        cm = {r["check_id"]: r["reqs"] for r in db.query("SELECT check_id, groupUniqArray(req_id) AS reqs FROM framework_map WHERE framework={f:String} GROUP BY check_id", {"f": framework})}
+        for r in rows:
+            r["req_ids"] = sorted({q for c in r.get("check_ids", []) for q in cm.get(c, [])}) if "check_ids" in r else r["req_ids"]
+    return rows
 
 
 @app.get("/api/actions")
@@ -109,10 +115,11 @@ def _watch_loop():
                 WATCH["error"] = None
             except Exception as e:
                 WATCH["error"] = str(e)[:200]
-        time.sleep(20)
+        time.sleep(10)
 
 
 threading.Thread(target=_watch_loop, daemon=True).start()
+threading.Thread(target=runner.ensure_frameworks, daemon=True).start()
 
 
 @app.get("/api/watch")
@@ -148,3 +155,52 @@ def live_reset():
 def revert_action(action_id: str):
     from . import config, remediate
     return remediate.revert(action_id, config.PROFILE, config.REGION)
+
+
+@app.get("/api/frameworks")
+def frameworks_list(account: str):
+    cov = compliance.coverage(account)
+    out = []
+    for f in frameworks.list_frameworks():
+        c = cov.get(f, {"total": 0, "scanned": 0})
+        out.append({**frameworks.display(f), "total": c["total"], "scanned": c["scanned"]})
+    return sorted(out, key=lambda x: (-(x["scanned"] > 0), x["name"]))
+
+
+JOBS: dict = {}
+
+
+class ScanReq(BaseModel):
+    account: str
+    framework: str
+
+
+@app.post("/api/scan")
+def start_scan(r: ScanReq):
+    key = (r.account, r.framework)
+    if JOBS.get(key, {}).get("status") == "running":
+        return JOBS[key]
+    JOBS[key] = {"status": "running", "started": time.time(), "error": None}
+
+    def run():
+        try:
+            runner.scan(r.framework, os.getenv("WARDEN_PROFILE") or None, [os.getenv("WARDEN_REGION", "us-east-1")], None)
+            JOBS[key].update(status="done")
+        except Exception as e:
+            JOBS[key].update(status="error", error=str(e)[:200])
+    threading.Thread(target=run, daemon=True).start()
+    return JOBS[key]
+
+
+@app.get("/api/events")
+def events(limit: int = 80, writes: bool = False):
+    where = "AND read_only = 0" if writes else ""
+    rows = db.query(f"""
+    SELECT e.event_id AS event_id, e.event_time AS event_time, e.event_name AS event_name, e.event_source AS event_source,
+           e.user_type AS user_type, e.user_arn AS user_arn, e.source_ip AS source_ip, e.region AS region, e.error_code AS error_code,
+           e.read_only AS read_only, d.rule_id AS rule_id, d.severity AS severity, d.status AS verdict
+    FROM (SELECT * FROM cloudtrail_events WHERE event_time > now() - INTERVAL 1 DAY {where} ORDER BY event_time DESC LIMIT {int(limit)}) AS e
+    LEFT JOIN (SELECT event_id, any(rule_id) AS rule_id, any(severity) AS severity, argMax(status, ts) AS status FROM detections GROUP BY event_id) AS d
+      ON d.event_id = e.event_id ORDER BY e.event_time DESC""")
+    stats = db.query("SELECT count() AS n, countIf(read_only = 0) AS writes FROM cloudtrail_events WHERE event_time > now() - INTERVAL 1 HOUR")[0]
+    return {"events": rows, "last_hour": stats, "now": time.time()}

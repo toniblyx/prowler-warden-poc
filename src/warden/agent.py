@@ -45,7 +45,7 @@ def _json(o):
 
 def call_tool(name: str, a: dict):
     if name == "get_posture":
-        reqs = compliance.requirements(a["account"], a["framework"])
+        reqs = compliance.posture(a["account"], a["framework"])
         failing = [{k: r[k] for k in ("req_id", "section", "description", "failing_checks")} for r in reqs if r["status"] == "FAIL"]
         return {"score": compliance.score(reqs), "failing_requirements": failing}
     if name == "get_trend":

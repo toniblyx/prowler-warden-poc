@@ -42,19 +42,21 @@ td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;font-
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.empty{color:var(--mut);padding:18px 4px}
 input.search{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:220px}input.search:focus{outline:2px solid color-mix(in srgb,var(--acc) 50%,transparent)}
 .scroll{max-height:420px;overflow:auto;margin:0 -6px;padding:0 6px}a{color:var(--blue)}pre{white-space:pre-wrap;margin:0;font:13px/1.55 ui-monospace,Menlo,monospace}
+@keyframes flash{from{background:color-mix(in srgb,var(--acc) 30%,transparent)}to{background:transparent}}tr.new{animation:flash 2.4s ease-out}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block}.dot.on{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
 </style></head><body>
 <header><div class="bar">
   <div class="brand"><img class="logo-w" src="/static/prowler-logo-white.png" alt="Prowler"><img class="logo-b" src="/static/prowler-logo-black.png" alt="Prowler"><span>Warden</span></div>
-  <select id="acct" title="Account and framework"></select>
+  <select id="acct" title="AWS account"></select><select id="fw" title="Compliance framework" style="max-width:340px"></select>
   <span class="mut" id="watchChip" title="Live CloudTrail watcher"><i class="dot" id="dot"></i> <span id="watchTxt">watcher off</span></span>
   <div class="sp"></div><span class="mut" id="meta"></span>
   <button class="btn" id="refresh" title="Recompute posture now">Refresh</button>
 </div></header>
 <main>
   <section class="card c4"><h2>Compliance</h2><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>
-    <div><div class="big" id="pct">–</div><div class="mut" id="fw"></div></div></div>
-    <div class="stat"><div><b id="sPass" class="ok" style="color:var(--ok)">–</b><span class="mut">pass</span></div><div><b id="sFail" style="color:var(--bad)">–</b><span class="mut">fail</span></div><div><b id="sNo">–</b><span class="mut">no data</span></div></div></section>
+    <div><div class="big" id="pct">–</div><div class="mut" id="fwLabel"></div></div></div>
+    <div class="stat"><div><b id="sPass" class="ok" style="color:var(--ok)">–</b><span class="mut">pass</span></div><div><b id="sFail" style="color:var(--bad)">–</b><span class="mut">fail</span></div><div><b id="sNo">–</b><span class="mut">no data</span></div></div>
+    <div class="note" id="cov" style="min-height:0"></div><div class="row" style="margin-top:8px"><button class="btn" id="scanFw" style="display:none">Scan this framework</button><span class="mut" id="scanSt"></span></div></section>
   <section class="card c4"><h2>Remediation mode <span class="chip blue" title="Stored in ClickHouse, changes apply instantly">runtime</span></h2>
     <div class="seg" id="seg"><button data-m="monitor" title="Alert only, change nothing">Monitor</button><button data-m="pr" title="Humans review a pull request">PR review</button><button data-m="auto" class="auto" title="Warden fixes AWS directly">Self-fix</button></div>
     <div class="note" id="modeNote"></div><div id="banner"></div>
@@ -68,6 +70,10 @@ input.search{background:var(--panel2);border:1px solid var(--line);border-radius
       <button class="btn" id="liveReset" title="Deletes the demo VPC and security group">Reset demo</button><span id="liveSt" class="mut"></span></div>
     <div class="steps" id="steps"></div></section>
 
+  <section class="card c12"><h2><i class="dot on" id="evDot"></i> CloudTrail live stream <span class="chip" id="evCount">–</span>
+    <span style="flex:1"></span><div class="sw" id="swWrites" style="margin:0" role="switch"><i></i><span>Only changes (hide reads)</span></div></h2>
+    <div class="row" style="margin-bottom:10px"><input class="search" id="evq" placeholder="Filter by event, user, IP, service"><span class="mut" id="evN"></span></div>
+    <div class="scroll" id="evs" style="max-height:380px"></div></section>
   <section class="card c7"><h2>CloudTrail detections <span class="chip blue">verified by Prowler</span></h2><div class="scroll" id="dets"></div></section>
   <section class="card c5"><h2>Agent actions</h2><div class="scroll" id="acts"></div></section>
 
@@ -79,17 +85,25 @@ input.search{background:var(--panel2);border:1px solid var(--line);border-radius
 <script>
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cache={};const put=(id,html)=>{if(cache[id]!==html){cache[id]=html;$(id).innerHTML=html}};   // skip identical renders: keeps hover/scroll/focus intact
-const J=(u,o)=>fetch(u,o).then(r=>r.json());const post=(u,b)=>J(u,{method:'POST',headers:{'content-type':'application/json'},body:b?JSON.stringify(b):undefined});
+const J=async(u,o)=>{for(let i=0;;i++){try{return await (await fetch(u,o)).json()}catch(e){if(i>=4)throw e;await new Promise(r=>setTimeout(r,600*(i+1)))}}};const post=(u,b)=>J(u,{method:'POST',headers:{'content-type':'application/json'},body:b?JSON.stringify(b):undefined});
 let cur=null,reqs=[],NOTE={monitor:'Alert only. Nothing in AWS or code is changed.',pr:'Human in the loop: Warden prepares a pull request to fix it in code. Nothing in AWS changes.',auto:'Self-fix: Warden changes AWS now, re-verifies with Prowler, then opens a PR so the code matches (no drift).'};
 const chip=(t,c)=>`<span class="chip ${c||''}">${esc(t)}</span>`;const st=s=>chip(s,/violation|failed|still/.test(s)?'bad':/compliant|fixed-verified|reverted|pr-opened|pr-ready/.test(s)?'ok':/queued|proposed|dry/.test(s)?'warn':'');
 const ago=t=>{const s=(Date.now()-new Date(t+'Z'))/1000;return s<90?'just now':s<3600?Math.round(s/60)+' min ago':Math.round(s/3600)+' h ago'};
 
-async function load(){const[a,f]=$('acct').value.split('|');cur={a,f};
+async function load(){const a=$('acct').value,f=$('fw').value;cur={a,f};
   const o=await J(`/api/overview?account=${a}&framework=${f}`);const s=o.score;
-  $('pct').textContent=s.pct+'%';$('fw').textContent=f.replace(/_/g,' ');$('sPass').textContent=s.pass;$('sFail').textContent=s.fail;$('sNo').textContent=s.no_data+s.manual;
+  $('pct').textContent=s.pct+'%';$('fwLabel').textContent=($('fw').selectedOptions[0]?$('fw').selectedOptions[0].text.split(' · ')[0]:f);$('sPass').textContent=s.pass;$('sFail').textContent=s.fail;$('sNo').textContent=s.no_data+s.manual;
   $('arc').style.strokeDashoffset=314*(1-s.pct/100);$('arc').style.stroke=s.pct>=80?'var(--ok)':s.pct>=50?'var(--warn)':'var(--bad)';
   $('meta').textContent=`${Number(o.rows).toLocaleString()} findings in ClickHouse · ${o.ms} ms`;
-  reqs=o.requirements.filter(r=>r.status=='FAIL');drawReqs();drawTrend(o.trend)}
+  reqs=o.requirements.filter(r=>r.status=='FAIL');drawReqs();drawTrend(o.trend);
+  const c=o.coverage,pc=c.total?Math.round(100*c.scanned/c.total):0;$('cov').textContent=c.total?`Coverage: ${c.scanned} of ${c.total} automated checks have results (${pc}%). Requirements with no results are not graded.`:'';
+  const j=o.job,run=j&&j.status=='running';$('scanFw').style.display=pc<100?'':'none';$('scanFw').disabled=!!run;$('scanFw').textContent=run?'Scanning…':'Scan this framework';
+  $('scanSt').textContent=run?'Prowler is running, usually 2-5 minutes. The page updates when done.':(j&&j.status=='error'?'Scan failed: '+j.error:'');
+  if(run&&!window._pollScan){window._pollScan=setInterval(async()=>{const x=await J(`/api/overview?account=${cur.a}&framework=${cur.f}`);if(!x.job||x.job.status!='running'){clearInterval(window._pollScan);window._pollScan=null;load();loadFw()}},8000)}}
+async function loadFw(){const a=$('acct').value,keep=$('fw').value||'cis_5.0_aws';const l=await J('/api/frameworks?account='+a);
+  const opt=x=>`<option value="${x.id}">${esc(x.name)} · ${x.scanned}/${x.total} checks</option>`;
+  $('fw').innerHTML=`<optgroup label="Has results">${l.filter(x=>x.scanned>0).map(opt).join('')}</optgroup><optgroup label="Not scanned yet">${l.filter(x=>!x.scanned).map(opt).join('')}</optgroup>`;
+  $('fw').value=l.some(x=>x.id==keep)?keep:l[0].id}
 function drawReqs(){const q=$('q').value.toLowerCase();const r=reqs.filter(x=>!q||(x.req_id+x.section+x.description+x.failing_checks.join(' ')).toLowerCase().includes(q));
   $('qn').textContent=`${r.length} of ${reqs.length}`;
   put('reqs',r.length?`<table><thead><tr><th>Req</th><th>Section</th><th>Failing checks</th></tr></thead><tbody>${r.map(x=>`<tr title="${esc(x.description)}"><td><b>${esc(x.req_id)}</b></td><td>${esc(x.section)}<div class="mut">${esc(x.description).slice(0,90)}</div></td><td class="mono">${x.failing_checks.map(esc).join('<br>')}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No failing requirements match.</div>')}
@@ -98,17 +112,27 @@ function drawTrend(t){if(!t.length)return;const w=300,h=120,p=8,pts=t.map((d,i)=
   put('trend',`<path d="${path} L${l[0]} ${h-p} L${pts[0][0]} ${h-p}Z" fill="var(--acc)" opacity=".12"/><path d="${path}" fill="none" stroke="var(--acc)" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${l[0]}" cy="${l[1]}" r="4" fill="var(--acc)"/>`);
   $('trendNote').textContent=`${t.length} scan${t.length>1?'s':''} · latest ${t[t.length-1].pct}%`}
 async function feeds(){
-  const[d,a,l,sg,w]=await Promise.all([J('/api/detections'),J('/api/actions'),J('/api/live'),J(`/api/signals?account=${cur.a}&framework=${cur.f}`),J('/api/watch')]);
+  const[d,a,l,sg,w]=await Promise.all([J('/api/detections?framework='+cur.f),J('/api/actions'),J('/api/live'),J(`/api/signals?account=${cur.a}&framework=${cur.f}`),J('/api/watch')]);
   put('dets',d.length?`<table><thead><tr><th>When</th><th>Event</th><th>Reqs</th><th>Prowler verdict</th></tr></thead><tbody>${d.map(x=>`<tr><td class="mut" title="${esc(x.event_time)} UTC">${ago(x.event_time)}</td><td>${chip(x.severity,x.severity)} ${esc(x.title)}<div class="mono mut">${esc(x.resource)} · ${esc(x.actor.split('/').pop())}</div></td><td>${x.req_ids.join(', ')}</td><td>${st(x.status)}<div class="mut" style="font-size:12px;margin-top:4px">${esc(x.note).slice(0,110)}</div></td></tr>`).join('')}</tbody></table>`:'<div class="empty">No events yet. Turn on the watcher and run the demo.</div>');
   put('acts',a.length?`<table><thead><tr><th>Kind</th><th>Status</th><th>What</th><th></th></tr></thead><tbody>${a.map(x=>{const link=/^https?:/.test(x.command||'')?`<a href="${esc(x.command)}" target="_blank" rel="noopener">PR</a>`:'';const rv=x.kind=='self-fix'&&x.status=='fixed-verified'?`<button class="btn" data-revert="${x.id}">Revert</button>`:'';
     return `<tr><td>${chip(x.kind==='self-fix'?'AWS fix':x.kind==='pr'?'Code (PR)':x.kind)}</td><td>${st(x.status)}</td><td>${esc(x.summary).slice(0,90)}<div class="mono mut">${esc(x.check_id)}${x.command&&!link&&x.kind==='pr'?' · branch '+esc(x.command):''}</div></td><td>${link}${rv}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">No actions yet.</div>');
   put('sigs',sg.ranked.length?`<table><thead><tr><th>Score</th><th>Verdict</th><th>Check</th></tr></thead><tbody>${sg.ranked.slice(0,10).map(x=>`<tr title="${esc(x.evidence.join('; '))}"><td><b>${x.score}</b></td><td>${chip(x.verdict,x.verdict=='likely-being-used'?'bad':x.verdict=='signal'?'warn':'')}</td><td class="mono">${esc(x.check_id)}${x.evidence.length?`<div class="mut">${x.evidence.map(esc).join('<br>')}</div>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No data.</div>');
   $('dot').className='dot'+(w.on?' on':'');$('watchTxt').textContent=w.error?('watcher error'):w.on?(w.last?`watching · last cycle ${w.last.events} new events`:'watching'):'watcher off';
-  setSw('swWatch',w.on);
+  setSw('swWatch',w.on);events();
   $('liveSt').innerHTML=l.sg?(l.port22_open_to_internet?`<span class="chip bad">${esc(l.sg)} port 22 OPEN to the internet</span>`:`<span class="chip ok">${esc(l.sg)} port 22 closed</span>`):'<span class="chip">no demo resources</span>';
   const e=d[0],hit=e&&e.rule_id=='sg_open_22',fixed=a.find(x=>x.kind=='self-fix'&&/fixed|reverted/.test(x.status)),code=a.find(x=>x.kind=='pr'&&/pr-/.test(x.status));
   const S=(n,t,ok,bad)=>`<div class="step ${bad?'bad':ok?'done':''}"><b>${n}</b><span>${t}</span></div>`;
   put('steps',S('1 AWS change',l.port22_open_to_internet?'port 22 opened':(l.sg?'closed again':'not started'),l.sg,l.port22_open_to_internet)+S('2 CloudTrail',hit?'event detected':'waiting (a few min)',hit)+S('3 Prowler verify',hit?(e.status=='violation'?'violation confirmed':e.status):'pending',hit&&e.status=='compliant'||hit&&e.status=='violation',hit&&e.status=='violation')+S('4 Runtime fix',fixed?fixed.status:'pending',fixed)+S('5 Code PR',code?code.status:'pending',code))}
+let seen=new Set(),firstEv=true;
+async function events(){const w=$('swWrites').classList.contains('on');const r=await J('/api/events?limit=120&writes='+w);const q=$('evq').value.toLowerCase();
+  const rows=r.events.filter(e=>!q||(e.event_name+e.event_source+e.user_arn+e.source_ip+e.user_type).toLowerCase().includes(q));
+  $('evCount').textContent=`${r.last_hour.n} in the last hour · ${r.last_hour.writes} changes`;$('evN').textContent=`showing ${rows.length}`;
+  const fresh=new Set(rows.filter(e=>!seen.has(e.event_id)).map(e=>e.event_id));
+  const html=rows.length?`<table><thead><tr><th>Time</th><th>Event</th><th>Service</th><th>Actor</th><th>Source IP</th><th></th></tr></thead><tbody>${rows.map(e=>{
+    const t=new Date(e.event_time+'Z').toLocaleTimeString([], {hour12:false});const svc=e.event_source.replace('.amazonaws.com','');const actor=(e.user_arn||e.user_type).split('/').pop()||e.user_type;
+    const flag=e.rule_id?chip(e.verdict=='violation'?'violation':e.verdict=='compliant'?'checked ok':'flagged',e.verdict=='compliant'?'ok':'bad'):'';
+    return `<tr class="${!firstEv&&fresh.has(e.event_id)?'new':''}" title="${esc(e.event_id)}"><td class="mono" title="${esc(e.event_time)} UTC">${t}</td><td><b>${esc(e.event_name)}</b> ${e.read_only?'':chip('change','warn')} ${e.error_code?chip(e.error_code,'bad'):''}</td><td>${esc(svc)}</td><td class="mono">${esc(actor)}</td><td class="mono">${esc(e.source_ip)}</td><td>${flag}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">No events yet. Turn the watcher on.</div>';
+  put('evs',html);rows.forEach(e=>seen.add(e.event_id));firstEv=false}
 function setSw(id,on){$(id).classList.toggle('on',!!on)}
 async function policy(){const p=await J('/api/policy');
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m==p.mode));
@@ -123,11 +147,13 @@ document.addEventListener('click',async e=>{const t=e.target.closest('button,.sw
   else if(t.id=='liveStart'){t.disabled=true;t.textContent='Opening port 22…';await post('/api/live/start');t.disabled=false;t.textContent='1. Open port 22 to the internet';feeds()}
   else if(t.id=='liveReset'){t.disabled=true;await post('/api/live/reset');t.disabled=false;feeds()}
   else if(t.id=='refresh'){load()}
+  else if(t.id=='swWrites'){t.classList.toggle('on');cache.evs=null;events()}
+  else if(t.id=='scanFw'){t.disabled=true;await post('/api/scan',{account:cur.a,framework:cur.f});load()}
   else if(t.id=='rev'){t.disabled=true;$('revSt').textContent='Agent is working…';$('rep').textContent='';const r=await post('/api/review',{account:cur.a,framework:cur.f});
     $('rep').textContent=r.error?('Error: '+r.error):`[tools: ${r.tools.join(' → ')}]\n\n${r.report}`;$('revSt').textContent='';t.disabled=false}});
-$('q').oninput=drawReqs;$('acct').onchange=load;
-(async()=>{const a=(await J('/api/accounts')).data;const real=a.sort((x,y)=>(y.account_id=='552455647653')-(x.account_id=='552455647653'));
-  $('acct').innerHTML=real.map(x=>`<option value="${x.account_id}|${x.framework}">${x.account_id} · ${x.framework}</option>`).join('');
-  if(!real.length)return;await load();await policy();await feeds();
+$('q').oninput=drawReqs;$('evq').oninput=()=>{cache.evs=null;events()};$('acct').onchange=async()=>{await loadFw();load()};$('fw').onchange=()=>{cache.dets=null;cache.sigs=null;load();feeds()};
+(async()=>{const a=(await J('/api/accounts')).data;const ids=[...new Set(a.map(x=>x.account_id))].sort((x,y)=>(y=='552455647653')-(x=='552455647653'));
+  $('acct').innerHTML=ids.map(x=>`<option value="${x}">${x}</option>`).join('');if(!ids.length)return;
+  await loadFw();await load();await policy();await feeds();
   setInterval(()=>{policy();feeds()},4000);setInterval(load,60000)})();
 </script></body></html>

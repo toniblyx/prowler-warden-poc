@@ -46,3 +46,9 @@ def check_metadata(check_id: str) -> dict:
 def has_fixer(check_id: str) -> bool:
     service = check_id.split("_")[0]
     return (SERVICES_DIR / service / check_id / f"{check_id}_fixer.py").exists()
+
+
+@lru_cache
+def display(framework: str) -> dict:
+    d = load(framework)
+    return {"id": framework, "name": d.get("Name") or framework, "version": d.get("Version", "")}

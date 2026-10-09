@@ -82,3 +82,35 @@ def top_failing_checks(account: str, framework: str, limit: int = 15) -> list[di
 
 def accounts() -> list[dict]:
     return db.query("SELECT account_id, framework, count() AS scans, max(scan_time) AS last_scan FROM scans GROUP BY account_id, framework")
+
+
+def posture(account: str, framework: str) -> list[dict]:
+    """Per-requirement status from the newest result for each check, whichever scan produced it.
+    Lets any framework be evaluated from checks already run, including event-triggered re-checks."""
+    sql = """
+    SELECT m.req_id AS req_id, any(m.section) AS section, any(m.description) AS description, any(m.manual) AS manual,
+           countIf(f.status = 'FAIL') AS failing, countIf(f.status = 'PASS') AS passing,
+           groupUniqArrayIf(m.check_id, f.status = 'FAIL') AS failing_checks,
+           multiIf(any(m.manual) = 1, 'MANUAL', countIf(f.status = 'FAIL') > 0, 'FAIL', countIf(f.status = 'PASS') > 0, 'PASS', 'NO_DATA') AS status
+    FROM framework_map AS m
+    LEFT JOIN (SELECT check_id, status FROM findings WHERE account_id = {a:String}
+               AND (check_id, scan_time) IN (SELECT check_id, max(scan_time) FROM findings WHERE account_id = {a:String} GROUP BY check_id)) AS f
+      ON f.check_id = m.check_id
+    WHERE m.framework = {f:String} GROUP BY m.req_id ORDER BY m.req_id"""
+    return db.query(sql, {"a": account, "f": framework})
+
+
+def coverage(account: str) -> dict:
+    """framework -> (checks total, checks with results for this account)."""
+    rows = db.query("""
+    SELECT m.framework AS framework, uniqExact(m.check_id) AS total, uniqExactIf(m.check_id, f.check_id != '') AS scanned
+    FROM framework_map AS m LEFT JOIN (SELECT DISTINCT check_id FROM findings WHERE account_id = {a:String}) AS f ON f.check_id = m.check_id
+    WHERE m.check_id != '' GROUP BY m.framework""", {"a": account})
+    return {r["framework"]: {"total": r["total"], "scanned": r["scanned"]} for r in rows}
+
+
+def unscanned_checks(account: str, framework: str) -> list[str]:
+    return [r["check_id"] for r in db.query("""
+    SELECT DISTINCT m.check_id AS check_id FROM framework_map AS m
+    WHERE m.framework = {f:String} AND m.check_id != '' AND m.check_id NOT IN (SELECT DISTINCT check_id FROM findings WHERE account_id = {a:String})""",
+                                          {"a": account, "f": framework})]
