@@ -62,3 +62,6 @@ Useful commands: `warden mode set monitor|pr|auto`, `warden live start|reset|sta
 - Code patching is deterministic only for open security group rules. Other checks hand off to the Fixer agent (`warden fix`).
 - Cost is a lagging signal (about 24 hours) and is evidence to investigate, not proof of compromise. The demo cost spike is a clearly labelled synthetic overlay.
 - 100% compliance is not literally guaranteed: root MFA needs a person, and some requirements cost money or risk lockouts. The fix simulator shows exactly how far each class of fix goes.
+
+## License
+Apache-2.0. See `LICENSE` and `NOTICE`. The Prowler name and logos belong to Prowler.

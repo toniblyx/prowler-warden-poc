@@ -1,0 +1,8 @@
+Prowler Warden
+Copyright 2026 Toni de la Fuente
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+This project builds on Prowler OSS (https://github.com/prowler-cloud/prowler), also Apache-2.0, and reads its compliance
+framework and check metadata at runtime. The Prowler name and logos in src/warden/static are trademarks of Prowler and are
+included only to identify the tool this project integrates with.

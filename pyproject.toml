@@ -3,6 +3,8 @@ name = "prowler-warden"
 version = "0.1.0"
 description = "Always-on AWS compliance agent built on Prowler OSS + ClickHouse"
 requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+readme = "README.md"
 dependencies = [
   "anthropic>=0.40",
   "clickhouse-connect>=0.8",
