@@ -98,3 +98,14 @@ def serve(port: int = 8765):
     """Start the dashboard."""
     import uvicorn
     uvicorn.run("warden.api:app", host="127.0.0.1", port=port)
+
+
+@app.command()
+def fix(account: str, repo: str, framework: str = config.DEFAULT_FRAMEWORK, file: str = "main.tf",
+        branch: str = "warden/remediate", open_pr: bool = False):
+    """Fixer agent: patch Terraform for failing checks, gate with Semgrep, optionally open a PR."""
+    from pathlib import Path
+    from . import fixer
+    out = fixer.propose(Path(repo), account, framework, file)
+    res = fixer.apply(Path(repo), out, branch, open_pr)
+    console.print(res)
