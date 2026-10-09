@@ -30,7 +30,7 @@ def run_prowler(framework: str, profile: str | None, regions: list[str] | None, 
 def run_prowler_checks(checks: list[str], profile: str | None, regions: list[str] | None) -> Path:
     out = Path(tempfile.mkdtemp(prefix="warden-verify-"))
     cmd = [str(Path(sys.executable).parent / "prowler"), "aws", "--check", *checks, "-M", "json-ocsf", "-o", str(out),
-           "-F", "verify", "--no-banner", "--ignore-exit-code-3"]
+           "-F", "verify", "--no-banner", "--ignore-exit-code-3", "--scan-unused-services"]
     if profile:
         cmd += ["--profile", profile]
     if regions:

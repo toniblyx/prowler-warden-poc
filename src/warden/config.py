@@ -14,3 +14,7 @@ CH_PASSWORD = os.getenv("WARDEN_CH_PASSWORD", "warden")
 CH_DB = os.getenv("WARDEN_CH_DB", "warden")
 MODEL = os.getenv("WARDEN_MODEL", "claude-sonnet-5-5")
 DEFAULT_FRAMEWORK = os.getenv("WARDEN_FRAMEWORK", "cis_5.0_aws")
+
+PROFILE = os.getenv("WARDEN_PROFILE") or None
+ACCOUNT = os.getenv("WARDEN_ACCOUNT", "")
+REGION = os.getenv("WARDEN_REGION", "us-east-1")

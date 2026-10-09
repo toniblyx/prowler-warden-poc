@@ -93,6 +93,8 @@ def handle(v: dict, framework: str, profile: str | None) -> dict:
     for f in v["failing"]:
         chk, res, region = f["check_id"], f["resource_uid"], f["region"] or det["region"]
         sev = det["severity"]
+        if det.get("resource") and det["resource"] not in res:
+            continue  # defence in depth: act only on the resource named in the triggering event
         if pol["mode"] == "monitor":
             out["results"].append({"check": chk, "resource": res, "action": "alert-only"})
             continue
@@ -122,3 +124,23 @@ def handle(v: dict, framework: str, profile: str | None) -> dict:
                 "", "pr-queued")
         out["results"].append({"check": chk, "resource": res, "action": "pr-queued"})
     return out
+
+
+def revert(action_id: str, profile: str | None, region: str) -> dict:
+    """Undo a self-fix using the inverse call recorded when it was applied."""
+    rows = db.query("SELECT * FROM actions FINAL WHERE toString(id) = {i:String}", {"i": action_id})
+    if not rows or rows[0]["kind"] != "self-fix":
+        return {"error": "not a self-fix action"}
+    a = rows[0]
+    undo = (json.loads(a["command"] or "null") or {}).get("undo")
+    if not undo:
+        return {"error": "nothing to undo for this fix"}
+    sess = _sess(profile, region)
+    if "authorize_security_group_ingress" in undo:
+        u = undo["authorize_security_group_ingress"]
+        sess.client("ec2").authorize_security_group_ingress(GroupId=u["GroupId"], IpPermissions=u["IpPermissions"])
+    elif "modify_db_instance" in undo:
+        sess.client("rds").modify_db_instance(ApplyImmediately=True, **undo["modify_db_instance"])
+    db.client().insert("actions", [[a["account_id"], a["framework"], "self-fix", a["check_id"], a["resource_uid"], a["summary"] + " (reverted)", a["command"], "reverted"]],
+                       column_names=["account_id", "framework", "kind", "check_id", "resource_uid", "summary", "command", "status"])
+    return {"reverted": action_id}

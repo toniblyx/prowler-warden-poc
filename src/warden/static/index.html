@@ -22,6 +22,9 @@ canvas{width:100%;height:140px}
 <div id="modes" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div><div class="pill" id="modeNote" style="margin-top:8px"></div>
 <div style="margin-top:8px"><label class="pill"><input type="checkbox" id="dry"> dry-run (log what auto mode would change, change nothing)</label>
 &nbsp; <label class="pill"><input type="checkbox" id="watchOn"> live CloudTrail watch</label> <span class="pill" id="watchSt"></span></div></div>
+<div class="card" style="grid-column:1/-1"><h2>Live demo (throwaway resources tagged warden-demo)</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="p" id="liveStart">1. Open port 22 to the internet</button><button id="liveReset">Reset demo (delete resources)</button><span class="pill" id="liveSt"></span></div>
+<div class="pill" style="margin-top:6px">Flow: AWS change, CloudTrail event (can take a few minutes), rule hit, Prowler verifies, then PR queue or self-fix by mode.</div></div>
 <div class="card" style="grid-column:1/-1"><h2>CloudTrail detections (verified by Prowler)</h2><table id="dets"></table></div>
 <div class="card" style="grid-column:1/-1"><h2>Agent actions</h2><table id="acts"></table></div>
 <div class="card" style="grid-column:1/-1"><h2>Exploitability signals (cost + activity)</h2><table id="sigs"></table></div>
@@ -60,14 +63,17 @@ async function loadPolicy(){const p=await (await fetch('/api/policy')).json();
   $('dry').checked=p.dry_run;$('dry').onchange=async e=>{await fetch('/api/policy',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key:'dry_run',value:e.target.checked})});loadPolicy()};
   const w=await (await fetch('/api/watch')).json();$('watchOn').checked=w.on;$('watchSt').textContent=w.error?('error: '+w.error):(w.last?`last cycle: ${w.last.events} events, ${w.last.detections} detections`:'');
   $('watchOn').onchange=async e=>{await fetch('/api/watch/'+e.target.checked,{method:'POST'})}}
+async function liveRefresh(){const l=await (await fetch('/api/live')).json();$('liveSt').textContent=l.sg?(l.port22_open_to_internet?`${l.sg}: port 22 OPEN to the internet`:`${l.sg}: port 22 closed`):'no demo resources';$('liveSt').style.color=l.port22_open_to_internet?'var(--bad)':'var(--ok)'}
+$('liveStart').onclick=async()=>{$('liveStart').disabled=true;await fetch('/api/live/start',{method:'POST'});$('liveStart').disabled=false;liveRefresh()};
+$('liveReset').onclick=async()=>{await fetch('/api/live/reset',{method:'POST'});liveRefresh()};
 const tag=s=>`<span class="${/violation|failed|still/.test(s)?'bad':/compliant|fixed-verified|reverted/.test(s)?'ok':''}">${esc(s)}</span>`;
 async function loadFeeds(){
   const d=await (await fetch('/api/detections')).json(),a=await (await fetch('/api/actions')).json();
   $('dets').innerHTML='<tr><th>Time</th><th>Sev</th><th>Event</th><th>Actor</th><th>Reqs</th><th>Prowler verdict</th></tr>'+d.map(x=>`<tr><td>${esc(x.event_time)}</td><td class="sev-${x.severity}">${x.severity}</td><td>${esc(x.title)}<br><span class="pill">${esc(x.resource)}</span></td><td>${esc(x.actor.split('/').pop())}</td><td>${x.req_ids.join(', ')}</td><td>${tag(x.status)}<br><span class="pill">${esc(x.note)}</span></td></tr>`).join('');
-  $('acts').innerHTML='<tr><th>Time</th><th>Kind</th><th>Status</th><th>Check</th><th>Resource</th></tr>'+a.map(x=>`<tr><td>${esc(x.ts)}</td><td>${x.kind}</td><td>${tag(x.status)}</td><td>${esc(x.check_id)}</td><td>${esc(x.resource_uid)}</td></tr>`).join('');
+  $('acts').innerHTML='<tr><th>Time</th><th>Kind</th><th>Status</th><th>Check</th><th>Resource</th><th></th></tr>'+a.map(x=>`<tr><td>${esc(x.ts)}</td><td>${x.kind}</td><td>${tag(x.status)}</td><td>${esc(x.check_id)}</td><td>${esc(x.resource_uid)}</td><td>${x.kind=='self-fix'&&x.status=='fixed-verified'?`<button onclick="fetch('/api/actions/${x.id}/revert',{method:'POST'}).then(loadFeeds)">Revert</button>`:''}</td></tr>`).join('');
   const sg=await (await fetch(`/api/signals?account=${cur.a}&framework=${cur.f}`)).json();
   $('sigs').innerHTML='<tr><th>Score</th><th>Verdict</th><th>Check</th><th>Evidence</th></tr>'+sg.ranked.map(x=>`<tr><td>${x.score}</td><td>${x.verdict}</td><td>${esc(x.check_id)}</td><td>${x.evidence.map(esc).join('<br>')}</td></tr>`).join('')}
-setInterval(()=>{if(cur){loadPolicy();loadFeeds()}},5000);
+setInterval(()=>{if(cur){loadPolicy();loadFeeds();liveRefresh()}},5000);
 (async()=>{const a=(await (await fetch('/api/accounts')).json()).data;
   $('acct').innerHTML=a.map(x=>`<option value="${x.account_id}|${x.framework}">${x.account_id} · ${x.framework}</option>`).join('');
   $('acct').onchange=load;if(a.length){await load();loadPolicy();loadFeeds()}})();

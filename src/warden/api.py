@@ -95,7 +95,7 @@ def get_signals(account: str, framework: str):
     return {"anomalies": signals.cost_anomalies(account), "ranked": signals.prioritize(account, framework, 10)}
 
 
-WATCH = {"on": False, "last": None, "error": None}
+WATCH = {"on": os.getenv("WARDEN_WATCH") == "1", "last": None, "error": None}
 
 
 def _watch_loop():
@@ -122,3 +122,27 @@ def watch_state():
 def watch_set(on: bool):
     WATCH["on"] = on
     return WATCH
+
+
+@app.get("/api/live")
+def live_status():
+    from . import live_demo
+    return live_demo.status()
+
+
+@app.post("/api/live/start")
+def live_start():
+    from . import live_demo
+    return live_demo.start()
+
+
+@app.post("/api/live/reset")
+def live_reset():
+    from . import live_demo
+    return live_demo.reset()
+
+
+@app.post("/api/actions/{action_id}/revert")
+def revert_action(action_id: str):
+    from . import config, remediate
+    return remediate.revert(action_id, config.PROFILE, config.REGION)

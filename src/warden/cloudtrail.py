@@ -20,7 +20,7 @@ def normalize(ct: dict) -> dict:
     ui = ct.get("userIdentity") or {}
     t = ct["eventTime"].replace("Z", "+00:00")
     return {
-        "event_id": ct["eventID"], "event_time": datetime.fromisoformat(t).astimezone(timezone.utc).replace(tzinfo=None),
+        "event_id": ct["eventID"], "event_time": datetime.fromisoformat(t).astimezone(timezone.utc),
         "account_id": ct.get("recipientAccountId") or ui.get("accountId", ""), "region": ct.get("awsRegion", ""),
         "event_source": ct.get("eventSource", ""), "event_name": ct["eventName"], "user_type": ui.get("type", ""),
         "user_arn": ui.get("arn", ""), "source_ip": ct.get("sourceIPAddress", ""), "error_code": ct.get("errorCode", ""),
@@ -65,7 +65,7 @@ def verify(det: dict, profile: str | None) -> dict:
     failing = [r for r in rows if r[7] == "FAIL"]
     if det["resource"]:  # narrow to the touched resource when we know it
         hit = [r for r in failing if det["resource"] in r[8] or det["resource"] in r[9]]
-        failing = hit or failing
+        failing = hit  # only the resource the event touched; never broaden to unrelated failures
     status = "violation" if failing else "compliant"
     note = (f"{len(failing)} failing resource(s): " + "; ".join(f"{r[4]} {r[8]}" for r in failing[:5])) if failing else "Prowler re-check passed"
     c = db.client()
@@ -75,25 +75,33 @@ def verify(det: dict, profile: str | None) -> dict:
             "failing": [{"check_id": r[4], "resource_uid": r[8], "region": r[3]} for r in failing]}
 
 
+WATERMARK: dict = {}
+
+
 def poll(account: str, profile: str | None, region: str = "us-east-1", since_minutes: int = 15, write_only: bool = False) -> list[dict]:
     """Pull management events via LookupEvents (works with or without a configured trail), newest first."""
     sess = boto3.Session(profile_name=profile, region_name=region)
     ct = sess.client("cloudtrail")
-    last = db.query("SELECT max(event_time) AS t FROM cloudtrail_events WHERE account_id={a:String} AND region={r:String}", {"a": account, "r": region})
-    start = (last[0]["t"] if last and last[0]["t"] and last[0]["t"].year > 2000 else datetime.utcnow() - timedelta(minutes=since_minutes))
-    start = min(start, datetime.utcnow() - timedelta(seconds=1))
-    kw = {"StartTime": start.replace(tzinfo=timezone.utc), "EndTime": datetime.now(timezone.utc), "MaxResults": 50}
+    start = WATERMARK.get((account, region)) or (datetime.now(timezone.utc) - timedelta(minutes=since_minutes))
+    poll_started = datetime.now(timezone.utc)
+    start = min(start, poll_started - timedelta(seconds=1))
+    kw = {"StartTime": start, "EndTime": poll_started, "MaxResults": 50}
     if write_only:
         kw["LookupAttributes"] = [{"AttributeKey": "ReadOnly", "AttributeValue": "false"}]
     events = []
     for page in ct.get_paginator("lookup_events").paginate(**kw):
         for ev in page["Events"]:
             events.append(normalize(json.loads(ev["CloudTrailEvent"])))
+    WATERMARK[(account, region)] = poll_started - timedelta(minutes=10)  # CloudTrail delivers late; overlap and dedupe by event id
     return events
 
 
 def cycle(account: str, framework: str, profile: str | None, region: str = "us-east-1", verify_hits: bool = True) -> dict:
     evs = poll(account, profile, region)
+    if evs:
+        seen = {r["event_id"] for r in db.query("SELECT event_id FROM cloudtrail_events WHERE event_id IN {ids:Array(String)}",
+                                                {"ids": [e["event_id"] for e in evs]})}
+        evs = [e for e in evs if e["event_id"] not in seen]
     store(evs)
     dets = detect(evs, framework)
     verified = [verify(d, profile) for d in dets] if verify_hits else []

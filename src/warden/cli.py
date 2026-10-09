@@ -165,3 +165,27 @@ def costs(account: str, framework: str = config.DEFAULT_FRAMEWORK, profile: str 
     for p in signals.prioritize(account, framework, 15):
         t.add_row(str(p["score"]), p["verdict"], p["severity"], p["check_id"], str(p["resources"]), "; ".join(p["evidence"])[:70])
     console.print(t)
+
+
+live_app = typer.Typer(help="Safe live demo on throwaway warden-demo-tagged resources")
+app.add_typer(live_app, name="live")
+
+
+@live_app.command("status")
+def live_status():
+    from . import live_demo
+    console.print(live_demo.status())
+
+
+@live_app.command("start")
+def live_start():
+    """Open port 22 to the internet on the throwaway demo security group (what Warden should catch)."""
+    from . import live_demo
+    console.print(live_demo.start())
+
+
+@live_app.command("reset")
+def live_reset():
+    """Delete the demo VPC + security group so the demo can run again."""
+    from . import live_demo
+    console.print(live_demo.reset())
