@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warden</title>
+<style>
+:root{--bg:#0e1116;--card:#171b22;--fg:#e6edf3;--mut:#8b949e;--ok:#3fb950;--bad:#f85149;--warn:#d29922;--acc:#58a6ff;--bd:#262c36}
+@media(prefers-color-scheme:light){:root{--bg:#f6f8fa;--card:#fff;--fg:#1f2328;--mut:#656d76;--bd:#d0d7de}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,sans-serif;padding:16px;max-width:1200px;margin:auto}
+h1{font-size:20px;margin:0}header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.pill{color:var(--mut);font-size:12px}select,button{background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px 10px;font:inherit}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc);cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.big{font-size:44px;font-weight:700}.ok{color:var(--ok)}.bad{color:var(--bad)}h2{font-size:13px;color:var(--mut);margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em}
+table{width:100%;border-collapse:collapse;font-size:12.5px}td,th{text-align:left;padding:4px 6px;border-bottom:1px solid var(--bd);vertical-align:top;word-break:break-all}
+.sev-critical,.sev-high{color:var(--bad)}.sev-medium{color:var(--warn)}pre{white-space:pre-wrap;margin:0;font:13px/1.5 ui-monospace,monospace}
+canvas{width:100%;height:140px}
+</style></head><body>
+<header><h1>🛡 Warden</h1><select id="acct"></select><span class="pill" id="meta"></span><span style="flex:1"></span>
+<button class="p" id="rev">Ask agent to review drift</button></header>
+<div class="grid">
+<div class="card"><h2>Compliance</h2><div class="big" id="pct">–</div><div class="pill" id="sub"></div></div>
+<div class="card"><h2>Trend (requirement-level)</h2><canvas id="cv"></canvas></div>
+<div class="card" style="grid-column:1/-1"><h2>Agent report</h2><pre id="rep">Click “Ask agent to review drift”.</pre></div>
+<div class="card" style="grid-column:1/-1"><h2>New failures since previous scan</h2><table id="drift"></table></div>
+<div class="card" style="grid-column:1/-1"><h2>Failing requirements</h2><table id="reqs"></table></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let cur;
+async function load(){
+  const [a,f]=$('acct').value.split('|');cur={a,f};
+  const o=await (await fetch(`/api/overview?account=${a}&framework=${f}`)).json();
+  $('pct').textContent=o.score.pct+'%';$('pct').className='big '+(o.score.pct>=80?'ok':'bad');
+  $('sub').textContent=`${o.score.pass} pass / ${o.score.fail} fail of ${o.score.graded} graded requirements · ${o.score.manual} manual`;
+  $('meta').textContent=`${Number(o.rows).toLocaleString()} findings in ClickHouse · overview computed in ${o.ms} ms`;
+  $('drift').innerHTML='<tr><th>Sev</th><th>Check</th><th>Resource</th><th>Reqs</th></tr>'+o.drift.regressions.map(r=>`<tr><td class="sev-${r.severity}">${r.severity}</td><td>${esc(r.check_id)}</td><td>${esc(r.resource_uid)}</td><td>${r.reqs.join(', ')}</td></tr>`).join('')
+    +`<tr><td colspan=4 class="pill">${o.drift.resolved.length} resolved since previous scan</td></tr>`;
+  $('reqs').innerHTML='<tr><th>Req</th><th>Section</th><th>Description</th><th>Failing checks</th></tr>'+o.requirements.filter(r=>r.status=='FAIL').map(r=>`<tr><td>${esc(r.req_id)}</td><td>${esc(r.section)}</td><td>${esc(r.description)}</td><td>${r.failing_checks.map(esc).join('<br>')}</td></tr>`).join('');
+  chart(o.trend);
+}
+function chart(t){const c=$('cv'),d=devicePixelRatio||1,w=c.width=c.clientWidth*d,h=c.height=c.clientHeight*d,x=c.getContext('2d');
+  x.clearRect(0,0,w,h);if(!t.length)return;const st=getComputedStyle(document.body);
+  const pts=t.map((p,i)=>[8*d+i*(w-16*d)/Math.max(1,t.length-1),h-14*d-(p.pct/100)*(h-28*d)]);
+  x.strokeStyle=st.getPropertyValue('--acc');x.lineWidth=2*d;x.beginPath();pts.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.stroke();
+  x.fillStyle=st.getPropertyValue('--bad');const l=pts[pts.length-1];x.beginPath();x.arc(l[0],l[1],4*d,0,7);x.fill();
+  x.fillStyle=st.getPropertyValue('--mut');x.font=`${11*d}px system-ui`;x.fillText(t[0].pct+'%',4*d,12*d);x.fillText(t[t.length-1].pct+'%',w-40*d,12*d)}
+$('rev').onclick=async()=>{$('rev').disabled=true;$('rep').textContent='Agent is working…';
+  const r=await (await fetch('/api/review',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({account:cur.a,framework:cur.f})})).json();
+  $('rep').textContent=r.error?('Error: '+r.error):(`[tools: ${r.tools.join(' → ')}]\n\n`+r.report);$('rev').disabled=false};
+(async()=>{const a=(await (await fetch('/api/accounts')).json()).data;
+  $('acct').innerHTML=a.map(x=>`<option value="${x.account_id}|${x.framework}">${x.account_id} · ${x.framework}</option>`).join('');
+  $('acct').onchange=load;if(a.length)load()})();
+</script></body></html>
