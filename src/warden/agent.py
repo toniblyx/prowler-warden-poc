@@ -3,13 +3,13 @@ import json
 
 import anthropic
 
-from . import compliance, config, db, frameworks
+from . import compliance, config, db, frameworks, signals
 
 SYSTEM = """You are Warden, an always-on AWS compliance agent. You keep an AWS account continuously compliant with a
 compliance framework (e.g. CIS, PCI, HIPAA). Facts come from Prowler OSS scans stored in ClickHouse.
 
 Workflow when asked to review an account: 1) get_posture, 2) get_drift to see what regressed since the previous scan,
-3) for the worst regressions call get_check_info to understand risk and the official remediation, 4) call
+2b) call get_exploitability_signals: rank by evidence of real use (cost spikes, suspicious CloudTrail), not compliance severity alone, and say which findings are likely being used vs merely misconfigured, 3) for the worst regressions call get_check_info to understand risk and the official remediation, 4) call
 propose_remediation for fixes you recommend. Rank by severity and by how many framework requirements a failure breaks.
 Never invent resource ids, requirement ids or CLI commands: use only data returned by tools. Fixes are PROPOSALS
 requiring human approval; say so. Finish with a short report: score and trend, what changed, top actions."""
@@ -23,6 +23,10 @@ TOOLS = [
      "input_schema": {"type": "object", "properties": {"account": {"type": "string"}, "framework": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["account", "framework"]}},
     {"name": "get_top_failing_checks", "description": "Failing checks in the latest scan ordered by severity then number of resources.",
      "input_schema": {"type": "object", "properties": {"account": {"type": "string"}, "framework": {"type": "string"}}, "required": ["account", "framework"]}},
+    {"name": "get_exploitability_signals", "description": "Failing checks ranked by real-world evidence of use: cost anomalies (Cost Explorer) and suspicious CloudTrail activity in the same service, on top of severity. Verdicts: likely-being-used, signal, misconfigured-only. Cost lags ~24h and is evidence to investigate, not proof.",
+     "input_schema": {"type": "object", "properties": {"account": {"type": "string"}, "framework": {"type": "string"}}, "required": ["account", "framework"]}},
+    {"name": "get_cost_anomalies", "description": "Services/regions whose latest daily cost is far above their trailing 14-day baseline.",
+     "input_schema": {"type": "object", "properties": {"account": {"type": "string"}}, "required": ["account"]}},
     {"name": "get_check_info", "description": "Prowler metadata for a check: risk, official remediation (CLI, Terraform, console), and whether Prowler ships an auto-fixer.",
      "input_schema": {"type": "object", "properties": {"check_id": {"type": "string"}}, "required": ["check_id"]}},
     {"name": "run_sql", "description": "Read-only SQL (SELECT/WITH) over ClickHouse tables: findings, scans, framework_map, actions. Use for ad-hoc questions.",
@@ -51,6 +55,10 @@ def call_tool(name: str, a: dict):
         return {"regressions": d["regressions"], "resolved_count": len(d["resolved"]), "resolved_sample": d["resolved"][:5]}
     if name == "get_top_failing_checks":
         return compliance.top_failing_checks(a["account"], a["framework"])
+    if name == "get_exploitability_signals":
+        return signals.prioritize(a["account"], a["framework"])
+    if name == "get_cost_anomalies":
+        return signals.cost_anomalies(a["account"])
     if name == "get_check_info":
         m = frameworks.check_metadata(a["check_id"])
         if not m:

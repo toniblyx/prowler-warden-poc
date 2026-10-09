@@ -5,7 +5,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from . import agent, compliance, config, db, frameworks, runner, synth
+from . import agent, compliance, config, db, frameworks, policy, runner, synth
 
 app = typer.Typer(help="Warden: always-on AWS compliance agent on Prowler OSS + ClickHouse")
 console = Console()
@@ -109,3 +109,59 @@ def fix(account: str, repo: str, framework: str = config.DEFAULT_FRAMEWORK, file
     out = fixer.propose(Path(repo), account, framework, file)
     res = fixer.apply(Path(repo), out, branch, open_pr)
     console.print(res)
+
+
+@app.command()
+def ct_watch(account: str, framework: str = config.DEFAULT_FRAMEWORK, profile: str = typer.Option(None), region: str = "us-east-1",
+             every: int = 60, once: bool = False):
+    """Real-time loop: pull CloudTrail events into ClickHouse, detect compliance-breaking changes, verify with Prowler."""
+    from . import cloudtrail
+    if once:
+        console.print(cloudtrail.cycle(account, framework, profile, region))
+    else:
+        cloudtrail.watch(account, framework, profile, region, every, on_cycle=console.print)
+
+
+@app.command()
+def detections(limit: int = 30):
+    """Show recent detections and their Prowler verification result."""
+    t = Table("time", "sev", "rule", "actor", "reqs", "status", "note")
+    for d in db.query(f"SELECT * FROM detections FINAL ORDER BY event_time DESC LIMIT {int(limit)}"):
+        t.add_row(str(d["event_time"]), d["severity"], d["rule_id"], d["actor"][-30:], ",".join(d["req_ids"]), d["status"], d["note"][:60])
+    console.print(t)
+
+
+mode_app = typer.Typer(help="Runtime remediation policy")
+app.add_typer(mode_app, name="mode")
+
+
+@mode_app.command("show")
+def mode_show():
+    console.print(policy.get())
+
+
+@mode_app.command("set")
+def mode_set(mode: str):
+    """monitor | pr (human reviews a PR) | auto (agent fixes AWS directly)."""
+    console.print(policy.set_("mode", mode))
+
+
+@mode_app.command("config")
+def mode_config(key: str, value: str):
+    """Set a policy key, e.g. dry_run false, auto_min_severity high, auto_deny_checks '["rds_instance_no_public_access"]'."""
+    import json
+    v = {"true": True, "false": False}.get(value.lower()) if value.lower() in ("true", "false") else (json.loads(value) if value[:1] in "[{" else value)
+    console.print(policy.set_(key, v))
+
+
+@app.command()
+def costs(account: str, framework: str = config.DEFAULT_FRAMEWORK, profile: str = typer.Option(None), fetch: bool = True):
+    """Pull Cost Explorer into ClickHouse and rank failing checks by exploitability signals (cost + CloudTrail)."""
+    from . import signals
+    if fetch:
+        console.print(f"{signals.fetch_costs(account, profile)} cost rows loaded")
+    console.print(signals.cost_anomalies(account))
+    t = Table("score", "verdict", "sev", "check", "res", "evidence")
+    for p in signals.prioritize(account, framework, 15):
+        t.add_row(str(p["score"]), p["verdict"], p["severity"], p["check_id"], str(p["resources"]), "; ".join(p["evidence"])[:70])
+    console.print(t)

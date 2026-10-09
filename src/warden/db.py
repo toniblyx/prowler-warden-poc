@@ -39,6 +39,48 @@ SCHEMA = [
         check_id LowCardinality(String),
         manual UInt8
     ) ENGINE = ReplacingMergeTree ORDER BY (framework, req_id, check_id)""",
+    """CREATE TABLE IF NOT EXISTS cloudtrail_events (
+        event_id String,
+        event_time DateTime,
+        account_id LowCardinality(String),
+        region LowCardinality(String),
+        event_source LowCardinality(String),
+        event_name LowCardinality(String),
+        user_type LowCardinality(String),
+        user_arn String,
+        source_ip String,
+        error_code LowCardinality(String),
+        read_only UInt8,
+        mfa_used LowCardinality(String),
+        request_params String,
+        raw String
+    ) ENGINE = ReplacingMergeTree
+    PARTITION BY toYYYYMM(event_time)
+    ORDER BY (account_id, event_name, event_time, event_id)""",
+    """CREATE TABLE IF NOT EXISTS detections (
+        id String,
+        ts DateTime DEFAULT now(),
+        event_id String,
+        event_time DateTime,
+        account_id LowCardinality(String),
+        region LowCardinality(String),
+        rule_id LowCardinality(String),
+        title String,
+        severity LowCardinality(String),
+        actor String,
+        resource String,
+        check_ids Array(String),
+        req_ids Array(String),
+        status LowCardinality(String),
+        note String
+    ) ENGINE = ReplacingMergeTree(ts) ORDER BY (account_id, id)""",
+    """CREATE TABLE IF NOT EXISTS cost_daily (
+        day Date, account_id LowCardinality(String), service LowCardinality(String), region LowCardinality(String),
+        amount Float64, fetched DateTime DEFAULT now()
+    ) ENGINE = ReplacingMergeTree(fetched) ORDER BY (account_id, service, region, day)""",
+    """CREATE TABLE IF NOT EXISTS policy (
+        key String, value String, updated DateTime DEFAULT now()
+    ) ENGINE = ReplacingMergeTree(updated) ORDER BY key""",
     """CREATE TABLE IF NOT EXISTS actions (
         id UUID DEFAULT generateUUIDv4(),
         ts DateTime DEFAULT now(),

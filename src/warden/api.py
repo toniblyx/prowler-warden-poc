@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from . import agent, compliance, db
+from . import agent, compliance, db, policy
 
 app = FastAPI(title="Warden")
 STATIC = Path(__file__).parent / "static"
@@ -57,3 +57,21 @@ def review(r: Review):
 @app.get("/api/proposals")
 def proposals():
     return db.query("SELECT toString(id) AS id, ts, status, check_id, resource_uid, summary, command FROM actions FINAL ORDER BY ts DESC LIMIT 50")
+
+
+@app.get("/api/policy")
+def get_policy():
+    return policy.get()
+
+
+class PolicySet(BaseModel):
+    key: str
+    value: str | bool | list[str]
+
+
+@app.post("/api/policy")
+def set_policy(p: PolicySet):
+    try:
+        return policy.set_(p.key, p.value)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})

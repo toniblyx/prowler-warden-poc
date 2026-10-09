@@ -27,6 +27,24 @@ def run_prowler(framework: str, profile: str | None, regions: list[str] | None, 
     return next(out.glob("*.ocsf.json"))
 
 
+def run_prowler_checks(checks: list[str], profile: str | None, regions: list[str] | None) -> Path:
+    out = Path(tempfile.mkdtemp(prefix="warden-verify-"))
+    cmd = [str(Path(sys.executable).parent / "prowler"), "aws", "--check", *checks, "-M", "json-ocsf", "-o", str(out),
+           "-F", "verify", "--no-banner", "--ignore-exit-code-3"]
+    if profile:
+        cmd += ["--profile", profile]
+    if regions:
+        cmd += ["--region", *regions]
+    subprocess.run(cmd, check=True)
+    return next(out.glob("*.ocsf.json"))
+
+
+def ingest_findings_only(rows: list[list]):
+    """Partial (event-triggered) scans: store the evidence but not as a full scan, so score/drift stay comparable."""
+    if rows:
+        db.init().insert("findings", rows, column_names=COLS)
+
+
 def parse_ocsf(path: Path, scan_id: str) -> list[list]:
     rows = []
     for f in json.loads(path.read_text()):
