@@ -2,7 +2,7 @@
 
 | Deliverable | Where |
 |---|---|
-| GitHub repository with reviewer access | **TODO**: push this folder (`prowler-warden`) and add reviewers. The demo infra repo is `toniblyx/prowler-warden-demo-infra` (private). |
+| GitHub repository | https://github.com/toniblyx/prowler-warden-poc (public, Apache-2.0). The demo infra it opens PRs against is `toniblyx/prowler-warden-demo-infra` (private). |
 | Demo video (3 minutes max) | **TODO**: record with `docs/DEMO_SCRIPT.md`, upload, paste the share link here. |
 | Documentation of what was built and tools used | `README.md`, this file, `docs/DEMO_SCRIPT.md` |
 | Team names and contact emails | Toni de la Fuente, toni@prowler.com (solo) |

@@ -3,7 +3,7 @@
 CloudTrail delivers events a few minutes late, so the live change is started **before recording** and the video shows its result.
 
 ## Pre-flight (start 10 minutes before recording)
-1. `aws sso login --profile AdministratorAccess-552455647653`
+1. `aws sso login --profile $WARDEN_PROFILE`
 2. `warden preflight` and fix anything marked FAIL.
 3. In the dashboard: **Remediation**, set mode **Self-fix**, untick dry-run, tick **Open real pull requests**, tick **Watch CloudTrail**.
 4. `warden live reset`, then `warden live start`. This opens port 22 on the throwaway group. Start it at least 6 minutes before recording.

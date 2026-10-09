@@ -3,13 +3,14 @@
 The map is what lets Warden fix a resource at runtime AND open a PR against the exact Terraform that owns it,
 so code and cloud stay in sync (no drift)."""
 import json
+import os
 import re
 from pathlib import Path
 
 import boto3
 
 SKIP_VPC_TAGS = {"warden-demo"}
-S3_SCOPE = re.compile(r"^(552455647653-acme-dev-|company-sensitive-data-demo|demo-bucket-|my-unique-bucket-|prowler-test-bucket|prowler-reports-demo)")
+S3_SCOPE = re.compile(os.getenv("WARDEN_S3_PATTERN", ".*"))  # which buckets to mirror; default all in the provider region
 
 
 def snake(s: str) -> str:

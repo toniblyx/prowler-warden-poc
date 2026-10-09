@@ -28,7 +28,10 @@ def index():
 
 @app.get("/api/accounts")
 def accounts():
-    return timed(compliance.accounts)
+    from . import config
+    r = timed(compliance.accounts)
+    r["data"].sort(key=lambda x: x["account_id"] != config.ACCOUNT)  # the configured account first
+    return r
 
 
 @app.get("/api/overview")

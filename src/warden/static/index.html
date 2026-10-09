@@ -213,7 +213,7 @@ document.addEventListener('click',async e=>{const nv=e.target.closest('nav butto
   else if(t.id=='rev'){t.disabled=true;$('revSt').textContent='Agent is working…';$('rep').textContent='';const r=await post('/api/review',{account:cur.a,framework:cur.f});
     $('rep').textContent=r.error?('Error: '+r.error):`[tools: ${r.tools.join(' → ')}]\n\n${r.report}`;$('revSt').textContent='';t.disabled=false}});
 $('q').oninput=drawReqs;$('evq').oninput=()=>{cache.evs=null;events()};$('acct').onchange=async()=>{await loadFw();load()};$('fw').onchange=()=>{cache.dets=null;cache.sigs=null;load();feeds()};
-(async()=>{const h=location.hash.slice(1);if(VIEWS[h])view(h);const a=(await J('/api/accounts')).data;const ids=[...new Set(a.map(x=>x.account_id))].sort((x,y)=>(y=='552455647653')-(x=='552455647653'));
+(async()=>{const h=location.hash.slice(1);if(VIEWS[h])view(h);const a=(await J('/api/accounts')).data;const ids=[...new Set(a.map(x=>x.account_id))];
   $('acct').innerHTML=ids.map(x=>`<option value="${x}">${x}</option>`).join('');if(!ids.length)return;
   await loadFw();await load();await policy();await feeds();
   setInterval(()=>{policy();feeds()},4000);setInterval(load,60000)})();
