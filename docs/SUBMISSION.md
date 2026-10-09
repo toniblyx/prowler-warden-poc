@@ -25,4 +25,4 @@ Not used: Senso.ai, Akash/AkashML.
 
 ## Before you submit
 - Rotate or remove anything secret: `.env` is git-ignored. The Guild trigger key and the Anthropic key live only there.
-- Set the remediation mode back to PR review and run `warden live reset` so no demo resources remain in the AWS account.
+- Set the remediation mode back to PR review and run `prowler-warden live reset` so no demo resources remain in the AWS account.

@@ -41,13 +41,13 @@ Not used: Senso.ai and Akash/AkashML.
 docker run -d --name warden-ch -p 8123:8123 -e CLICKHOUSE_USER=default -e CLICKHOUSE_PASSWORD=warden clickhouse/clickhouse-server
 uv venv --python 3.12 ~/venvs/prowler-warden && VIRTUAL_ENV=~/venvs/prowler-warden uv pip install -e . semgrep -e /path/to/prowler
 cp .env.example .env            # ANTHROPIC_API_KEY, WARDEN_PROFILE, WARDEN_ACCOUNT, GUILD_* ...
-warden scan --profile <aws-profile> --framework cis_5.0_aws
-warden costs <account> --profile <aws-profile>
-warden serve --port 8799        # dashboard; turn on the CloudTrail watcher there
-warden preflight                # checks everything the live demo needs
-warden publish                  # redacted status page in site/
+prowler-warden scan --profile <aws-profile> --framework cis_5.0_aws
+prowler-warden costs <account> --profile <aws-profile>
+prowler-warden serve --port 8799        # dashboard; turn on the CloudTrail watcher there
+prowler-warden preflight                # checks everything the live demo needs
+prowler-warden publish                  # redacted status page in site/
 ```
-Useful commands: `warden mode set monitor|pr|auto`, `warden live start|reset|status`, `warden review <account>`, `warden fix <account> <repo>`.
+Useful commands: `prowler-warden mode set monitor|pr|auto`, `prowler-warden live start|reset|status`, `prowler-warden review <account>`, `prowler-warden fix <account> <repo>`.
 
 ## Safety model
 - Default mode is **PR review** with **dry-run on**. Self-fix must be switched on, and the UI shows a red LIVE banner.
@@ -59,7 +59,7 @@ Useful commands: `warden mode set monitor|pr|auto`, `warden live start|reset|sta
 ## Honest limitations
 - Scans cover one region (`us-east-1`). Selecting another framework reuses existing results and offers a scan for missing checks.
 - CloudTrail `LookupEvents` delivers events with a delay of a few minutes. True real time needs EventBridge, which is the next step.
-- Code patching is deterministic only for open security group rules. Other checks hand off to the Fixer agent (`warden fix`).
+- Code patching is deterministic only for open security group rules. Other checks hand off to the Fixer agent (`prowler-warden fix`).
 - Cost is a lagging signal (about 24 hours) and is evidence to investigate, not proof of compromise. The demo cost spike is a clearly labelled synthetic overlay.
 - 100% compliance is not literally guaranteed: root MFA needs a person, and some requirements cost money or risk lockouts. The fix simulator shows exactly how far each class of fix goes.
 

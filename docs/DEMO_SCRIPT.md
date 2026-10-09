@@ -4,9 +4,9 @@ CloudTrail delivers events a few minutes late, so the live change is started **b
 
 ## Pre-flight (start 10 minutes before recording)
 1. `aws sso login --profile $WARDEN_PROFILE`
-2. `warden preflight` and fix anything marked FAIL.
+2. `prowler-warden preflight` and fix anything marked FAIL.
 3. In the dashboard: **Remediation**, set mode **Self-fix**, untick dry-run, tick **Open real pull requests**, tick **Watch CloudTrail**.
-4. `warden live reset`, then `warden live start`. This opens port 22 on the throwaway group. Start it at least 6 minutes before recording.
+4. `prowler-warden live reset`, then `prowler-warden live start`. This opens port 22 on the throwaway group. Start it at least 6 minutes before recording.
 5. **Cost & signals**: click **Inject demo cost spike**.
 6. Open in tabs: the dashboard (`#overview`), the deck, the Slack channel `alert-demo-prowler`, the demo repo's pull requests, the status page.
 7. Confirm the five-step tracker under **Remediation** shows runtime fix and code PR done before you press record.
@@ -30,4 +30,4 @@ CloudTrail delivers events a few minutes late, so the live change is started **b
 - **No detection yet**: CloudTrail is slow. Show the earlier completed chain in the **Live events** history, or record the live part again once it lands.
 - **Slack silent**: show the Guild session (`guild session list`) as proof the agent ran, then say the Slack post lags.
 - **PR step skipped**: leave "Open real pull requests" off and show the prepared branch in the action log instead.
-- **Reset between takes**: `warden live reset`, then `warden live start`, wait 6 minutes.
+- **Reset between takes**: `prowler-warden live reset`, then `prowler-warden live start`, wait 6 minutes.

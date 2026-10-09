@@ -14,8 +14,8 @@ dependencies = [
   "typer>=0.12",
 ]
 [project.scripts]
-warden = "warden.cli:app"
 prowler-warden = "warden.cli:app"
+warden = "warden.cli:app"  # legacy alias, kept for existing shell habits and permission rules
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

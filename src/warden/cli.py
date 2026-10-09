@@ -7,7 +7,7 @@ from rich.table import Table
 
 from . import agent, compliance, config, db, frameworks, policy, runner, synth
 
-app = typer.Typer(help="Warden: always-on AWS compliance agent on Prowler OSS + ClickHouse")
+app = typer.Typer(help="Prowler Warden: always-on AWS compliance agent on Prowler OSS + ClickHouse")
 console = Console()
 
 
@@ -131,7 +131,7 @@ def detections(limit: int = 30):
     console.print(t)
 
 
-mode_app = typer.Typer(help="Runtime remediation policy")
+mode_app = typer.Typer(help="Runtime remediation policy (prowler-warden mode ...)")
 app.add_typer(mode_app, name="mode")
 
 
