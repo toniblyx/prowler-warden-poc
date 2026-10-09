@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Prowler Warden real-time feed. EventBridge sends risky AWS API calls (from CloudTrail) to an SQS queue that Warden long-polls. Delete the stack to remove everything.
+Resources:
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: warden-events
+      MessageRetentionPeriod: 3600
+      ReceiveMessageWaitTimeSeconds: 20
+      Tags:
+        - { Key: warden, Value: realtime }
+  Rule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: warden-risky-api-calls
+      Description: Risky changes that can break compliance checks, forwarded to Warden
+      State: ENABLED
+      EventPattern:
+        detail-type: ["AWS API Call via CloudTrail", "AWS Console Sign In via CloudTrail"]
+        detail:
+          eventName:
+            - AuthorizeSecurityGroupIngress
+            - PutBucketPublicAccessBlock
+            - DeleteBucketPublicAccessBlock
+            - PutAccountPublicAccessBlock
+            - DeletePublicAccessBlock
+            - PutBucketPolicy
+            - StopLogging
+            - DeleteTrail
+            - UpdateTrail
+            - StopConfigurationRecorder
+            - DeleteConfigurationRecorder
+            - DeleteFlowLogs
+            - ScheduleKeyDeletion
+            - DisableKey
+            - DisableEbsEncryptionByDefault
+            - CreateVolume
+            - RunInstances
+            - CreateDBInstance
+            - ModifyDBInstance
+            - AttachUserPolicy
+            - AttachRolePolicy
+            - AttachGroupPolicy
+            - CreateAccessKey
+            - ConsoleLogin
+      Targets:
+        - { Id: warden-queue, Arn: !GetAtt Queue.Arn }
+  QueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [!Ref Queue]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowEventBridge
+            Effect: Allow
+            Principal: { Service: events.amazonaws.com }
+            Action: sqs:SendMessage
+            Resource: !GetAtt Queue.Arn
+            Condition:
+              ArnEquals: { "aws:SourceArn": !GetAtt Rule.Arn }
+Outputs:
+  QueueUrl:
+    Value: !Ref Queue

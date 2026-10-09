@@ -218,6 +218,7 @@ def preflight():
     p = policy.get()
     ok(True, f"mode={p['mode']} dry_run={p['dry_run']} open_pr={p['open_pr']} repo={'set' if p['repo'] else 'missing'}")
     ok(all(os.getenv(k) for k in ("GUILD_API_URL", "GUILD_TRIGGER_KEY_ID", "GUILD_TRIGGER_KEY_SECRET", "GUILD_SLACK_CHANNEL")), "Guild to Slack alerts configured", "fill GUILD_* in .env")
+    ok(bool(os.getenv("WARDEN_SQS_URL")), "Prowler real-time feed configured (EventBridge to SQS)", "prowler-warden realtime deploy")
     ok(bool(os.getenv("ANTHROPIC_API_KEY")), "ANTHROPIC_API_KEY set", "add it to .env")
     try:
         console.print(f"      demo resources: {live_demo.status()}  cost overlay: {'on' if signals.demo_active(config.ACCOUNT) else 'off'}")
@@ -259,3 +260,37 @@ def teleprompter(port: int = 8800):
         ip = "127.0.0.1"
     console.print(f"Teleprompter for your phone (same Wi-Fi): [bold]http://{ip}:{port}[/]   (Ctrl+C to stop)")
     HTTPServer(("0.0.0.0", port), H).serve_forever()
+
+
+rt_app = typer.Typer(help="Prowler real-time: event-driven checks fed by EventBridge and SQS")
+app.add_typer(rt_app, name="realtime")
+
+
+@rt_app.command("deploy")
+def rt_deploy():
+    """Create the warden-realtime CloudFormation stack (EventBridge rule + SQS queue) and save its URL to .env."""
+    from pathlib import Path
+    from . import realtime
+    u = realtime.deploy()
+    env = Path(__file__).resolve().parents[2] / ".env"
+    lines = [ln for ln in (env.read_text().splitlines() if env.exists() else []) if not ln.startswith("WARDEN_SQS_URL=")]
+    env.write_text("\n".join(lines + [f"WARDEN_SQS_URL={u}"]) + "\n")
+    console.print(f"deployed. WARDEN_SQS_URL saved to .env: {u}\nRestart `prowler-warden serve` to start the real-time feed.")
+
+
+@rt_app.command("destroy")
+def rt_destroy():
+    """Delete the warden-realtime stack."""
+    from . import realtime
+    realtime.destroy()
+    console.print("stack deleted")
+
+
+@rt_app.command("listen")
+def rt_listen(framework: str = config.DEFAULT_FRAMEWORK):
+    """Foreground listener: process real-time events as they arrive (the server does this too when the watcher is on)."""
+    from . import realtime
+    while True:
+        r = realtime.poll_once(realtime.url(), framework, config.PROFILE)
+        if r["messages"]:
+            console.print(r)

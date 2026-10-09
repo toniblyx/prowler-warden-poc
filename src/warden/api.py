@@ -106,7 +106,7 @@ def get_signals(account: str, framework: str):
     return {"anomalies": signals.cost_anomalies(account), "ranked": signals.prioritize(account, framework, 10)}
 
 
-WATCH = {"on": os.getenv("WARDEN_WATCH") == "1", "last": None, "error": None}
+WATCH = {"on": os.getenv("WARDEN_WATCH") == "1", "last": None, "error": None, "realtime": {"configured": bool(os.getenv("WARDEN_SQS_URL")), "events": 0, "last_at": None, "error": None}}
 
 
 def _watch_loop():
@@ -121,7 +121,25 @@ def _watch_loop():
         time.sleep(10)
 
 
+def _rt_loop():
+    """Real-time feed: long-poll the SQS queue that EventBridge fills (seconds of latency instead of minutes)."""
+    from . import realtime
+    while True:
+        if WATCH["on"] and realtime.url():
+            try:
+                r = realtime.poll_once(realtime.url(), os.getenv("WARDEN_FRAMEWORK", "cis_5.0_aws"), os.getenv("WARDEN_PROFILE") or None)
+                if r["messages"]:
+                    WATCH["realtime"].update(events=WATCH["realtime"]["events"] + r["events"], last_at=time.time(), error=None)
+                    WATCH["last"] = {"events": r["events"], "detections": r["detections"], "verified": [], "remediation": r["remediation"], "via": "realtime"}
+            except Exception as e:
+                WATCH["realtime"]["error"] = str(e)[:160]
+                time.sleep(5)
+        else:
+            time.sleep(3)
+
+
 threading.Thread(target=_watch_loop, daemon=True).start()
+threading.Thread(target=_rt_loop, daemon=True).start()
 threading.Thread(target=runner.ensure_frameworks, daemon=True).start()
 
 

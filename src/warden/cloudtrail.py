@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -96,19 +97,27 @@ def poll(account: str, profile: str | None, region: str = "us-east-1", since_min
     return events
 
 
+_LOCK = threading.Lock()  # the LookupEvents poller and the real-time SQS feed share one pipeline
+
+
+def process_events(evs: list[dict], framework: str, profile: str | None, verify_hits: bool = True) -> dict:
+    """Dedupe by event id, store, detect, verify with Prowler, then apply the remediation policy."""
+    with _LOCK:
+        if evs:
+            seen, ids = set(), [e["event_id"] for e in evs]
+            for i in range(0, len(ids), 500):  # keep URL parameters small: ClickHouse rejects very large single fields
+                seen |= {r["event_id"] for r in db.query("SELECT event_id FROM cloudtrail_events WHERE event_id IN {ids:Array(String)}", {"ids": ids[i:i + 500]})}
+            evs = [e for e in evs if e["event_id"] not in seen]
+        store(evs)
+        dets = detect(evs, framework)
+        verified = [verify(d, profile) for d in dets] if verify_hits else []
+        handled = [remediate.handle(v, framework, profile) for v in verified if v["status"] == "violation"]
+        return {"events": len(evs), "detections": len(dets), "verified": [{k: v[k] for k in ("id", "status", "note")} for v in verified],
+                "remediation": handled}
+
+
 def cycle(account: str, framework: str, profile: str | None, region: str = "us-east-1", verify_hits: bool = True) -> dict:
-    evs = poll(account, profile, region)
-    if evs:
-        seen, ids = set(), [e["event_id"] for e in evs]
-        for i in range(0, len(ids), 500):  # keep URL parameters small: ClickHouse rejects very large single fields
-            seen |= {r["event_id"] for r in db.query("SELECT event_id FROM cloudtrail_events WHERE event_id IN {ids:Array(String)}", {"ids": ids[i:i + 500]})}
-        evs = [e for e in evs if e["event_id"] not in seen]
-    store(evs)
-    dets = detect(evs, framework)
-    verified = [verify(d, profile) for d in dets] if verify_hits else []
-    handled = [remediate.handle(v, framework, profile) for v in verified if v["status"] == "violation"]
-    return {"events": len(evs), "detections": len(dets), "verified": [{k: v[k] for k in ("id", "status", "note")} for v in verified],
-            "remediation": handled}
+    return process_events(poll(account, profile, region), framework, profile, verify_hits)
 
 
 def watch(account: str, framework: str, profile: str | None, region: str = "us-east-1", every: int = 60, on_cycle=print):

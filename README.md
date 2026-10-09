@@ -12,19 +12,21 @@ the hole), and every finding looks equally urgent even though only some are bein
 ## What Warden does
 | Step | How |
 |---|---|
-| **Detect** | Prowler OSS scans plus CloudTrail events in near real time. A rule maps each risky API call to the compliance checks it can break, then a targeted Prowler re-check confirms the violation. |
+| **Detect** | **Prowler real-time**: risky API calls reach Prowler through EventBridge in seconds. A rule maps each call to the compliance checks it can break, and a **targeted Prowler check** on that exact resource confirms the violation. Prowler decides; ClickHouse only stores the evidence. |
 | **Decide** | Cost Explorer spikes and suspicious CloudTrail activity mark a finding as "likely being used", not just present. |
 | **Fix** | A runtime switch picks the response: **monitor**, **PR review** (human reviews a pull request) or **self-fix** (Warden changes AWS, then opens a PR so the code matches). |
 | **Prove** | Prowler re-verifies, a Guild.ai agent posts a Slack alert, and a redacted, SHA-256-stamped status page is published. |
 
 ## Architecture
 ```
-AWS account                 Warden                                          Real actions
------------                 ------                                          ------------
-Prowler OSS scans   ──►  ClickHouse  ◄── rules, drift, cost signals  ──►  AWS self-fix (boto3, re-verified by Prowler)
-CloudTrail events   ──►  (findings,       Claude agent (tool use)     ──►  GitHub PR (Semgrep gate) against warden-map'd Terraform
-Cost Explorer       ──►   events, cost,   runtime policy              ──►  Slack alert (agent hosted on Guild.ai)
-                          detections)                                 ──►  Status page (hash-stamped evidence)
+AWS account                         Prowler Warden                                      Real actions
+-----------                         --------------                                      ------------
+Prowler OSS scans  ─────────────►  ┌─ Prowler real-time ─────────────────┐   ──►  AWS self-fix (boto3, re-verified by Prowler)
+API calls ► EventBridge ► SQS ───► │ event ► rule ► targeted Prowler check│   ──►  GitHub PR (Semgrep gate) on warden-map'd Terraform
+Cost Explorer ──────────────────►  └──────────────┬──────────────────────┘   ──►  Slack alert (agent hosted on Guild.ai)
+                                                   ▼                           ──►  Status page (hash-stamped evidence)
+                                     ClickHouse (findings, events, cost, detections, policy)
+                                     + exploitability signals + Claude agent + runtime policy
 ```
 `inventory.py` mirrors the live account as Terraform (with import blocks) and writes `warden-map.json`, a map from AWS ids to
 Terraform addresses. That map is how a runtime fix finds the code it must also change.
@@ -42,6 +44,7 @@ docker run -d --name warden-ch -p 8123:8123 -e CLICKHOUSE_USER=default -e CLICKH
 uv venv --python 3.12 ~/venvs/prowler-warden && VIRTUAL_ENV=~/venvs/prowler-warden uv pip install -e . semgrep -e /path/to/prowler
 cp .env.example .env            # ANTHROPIC_API_KEY, WARDEN_PROFILE, WARDEN_ACCOUNT, GUILD_* ...
 prowler-warden scan --profile <aws-profile> --framework cis_5.0_aws
+prowler-warden realtime deploy # EventBridge rule + SQS queue: API calls reach Prowler in seconds
 prowler-warden costs <account> --profile <aws-profile>
 prowler-warden serve --port 8799        # dashboard; turn on the CloudTrail watcher there
 prowler-warden preflight                # checks everything the live demo needs
@@ -58,7 +61,7 @@ Useful commands: `prowler-warden mode set monitor|pr|auto`, `prowler-warden live
 
 ## Honest limitations
 - Scans cover one region (`us-east-1`). Selecting another framework reuses existing results and offers a scan for missing checks.
-- CloudTrail `LookupEvents` delivers events with a delay of a few minutes. True real time needs EventBridge, which is the next step.
+- The real-time feed needs a small CloudFormation stack (`prowler-warden realtime deploy`: one EventBridge rule and one SQS queue). Without it Warden falls back to CloudTrail `LookupEvents`, which lags by about 3 to 6 minutes.
 - Code patching is deterministic only for open security group rules. Other checks hand off to the Fixer agent (`prowler-warden fix`).
 - Cost is a lagging signal (about 24 hours) and is evidence to investigate, not proof of compromise. The demo cost spike is a clearly labelled synthetic overlay.
 - 100% compliance is not literally guaranteed: root MFA needs a person, and some requirements cost money or risk lockouts. The fix simulator shows exactly how far each class of fix goes.
