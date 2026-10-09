@@ -2,94 +2,115 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Prowler Warden</title>
 <link rel="icon" href="/static/prowler-logo-white.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
 <style>
-.brand .logo-b{display:none}
-:root{--bg:#0b0d10;--panel:#12161b;--panel2:#171c22;--line:#222a33;--fg:#eef2f6;--mut:#8a97a6;--acc:#3ddc97;--acc-fg:#04130b;--bad:#ff5d6c;--warn:#f5b84b;--ok:#3ddc97;--blue:#6aa8ff;--r:12px}
-@media(prefers-color-scheme:light){:root{--bg:#f4f6f8;--panel:#fff;--panel2:#f0f3f6;--line:#dde3ea;--fg:#10161d;--mut:#5d6b7a;--acc:#14a56a;--acc-fg:#fff;--bad:#d6293b;--warn:#b7791f;--ok:#14a56a;--blue:#2563eb}.brand .logo-w{display:none}.brand .logo-b{display:block}}
+:root{color-scheme:dark;--bg:#000;--panel:#0c0a09;--panel2:#121110;--line:#27272a;--line2:#3f3f46;--fg:#fff;--fg2:#e4e4e7;--mut:#a1a1aa;--acc:#6ee7b7;--acc2:#99f6e4;--acc-fg:#022c22;--bad:#f43f5e;--ok:#4ade80;--warn:#fb923c;--blue:#3c8dff;--crit:#ff006a;--high:#f77852;--med:#fec94d;--r:14px;--side:rgba(255,255,255,.06);--sideb:rgba(255,255,255,.11)}
+@media(prefers-color-scheme:light){:root{color-scheme:light;--bg:#fdfdfd;--panel:#fff;--panel2:#f8fafc;--line:#e5e5e5;--line2:#cbd5e1;--fg:#020617;--fg2:#27272a;--mut:#71717a;--acc:#059669;--acc2:#047857;--acc-fg:#022c22;--bad:#e11d48;--ok:#16a34a;--warn:#ea580c;--crit:#e0005f;--high:#ea580c;--med:#b7791f;--side:rgba(255,255,255,.78);--sideb:rgba(15,23,42,.09)}}
+.logo-d{display:block}.logo-l{display:none}@media(prefers-color-scheme:light){.logo-d{display:none}.logo-l{display:block}}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 button,select,input{font:inherit;color:inherit}
-header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.bar{max-width:1280px;margin:auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px}.brand img{height:20px}.brand span{color:var(--mut);font-weight:500;padding-left:12px;border-left:1px solid var(--line)}
+.app{display:grid;grid-template-columns:252px 1fr;min-height:100vh}
+aside{position:sticky;top:0;height:100vh;padding:18px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px;background:radial-gradient(circle at 20% -10%,rgba(46,229,155,.14),rgba(98,223,240,.05) 40%,transparent 70%),var(--bg)}
+aside .logo{padding:4px 8px 16px}aside .logo img{width:168px;height:auto}
+.tag{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);padding:10px 12px 4px;font-weight:600}
+nav button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:10px;padding:9px 12px;color:var(--mut);cursor:pointer;font-weight:500;position:relative;transition:background .12s,color .12s,border-color .12s}
+nav button svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button:hover{background:var(--side);color:var(--fg)}
+nav button.on{background:var(--side);border-color:var(--sideb);color:var(--fg)}nav button.on svg{color:var(--acc)}nav button.on:before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--acc)}
+.sidefoot{margin-top:auto;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font-size:12.5px;color:var(--mut)}.sidefoot b{color:var(--fg);font-weight:600}
+.content{min-width:0}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 28px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px)}
+.crumb{font-size:18px;font-weight:600;letter-spacing:-.01em}.crumb small{display:block;font-size:12px;color:var(--mut);font-weight:400;letter-spacing:0}
 .sp{flex:1}
-select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer}select:hover{border-color:var(--mut)}
-main{max-width:1280px;margin:auto;padding:20px;display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
-.card h2{margin:0 0 12px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:8px}
+select{background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:8px 12px;cursor:pointer;transition:border-color .12s}select:hover{border-color:var(--mut)}select:focus{outline:2px solid color-mix(in srgb,var(--acc) 45%,transparent)}
+main{max-width:1320px;margin:auto;padding:24px 28px 48px;display:grid;gap:18px;grid-template-columns:repeat(12,1fr)}
+main[data-view] > .card{display:none}
+main[data-view="overview"] > [data-v~="overview"],main[data-view="compliance"] > [data-v~="compliance"],main[data-view="events"] > [data-v~="events"],main[data-view="cost"] > [data-v~="cost"],main[data-view="remediation"] > [data-v~="remediation"],main[data-view="agent"] > [data-v~="agent"]{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-width:0}
+.card h2{margin:0 0 14px;font-size:13px;font-weight:600;color:var(--fg2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
-@media(max-width:1000px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
-.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;transition:background .12s,border-color .12s,transform .05s}
-.btn:hover{border-color:var(--mut);background:color-mix(in srgb,var(--panel2) 70%,var(--fg) 8%)}.btn:active{transform:translateY(1px)}
-.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-fg)}.btn.pri:hover{filter:brightness(1.08)}.btn.dng{border-color:var(--bad);color:var(--bad)}.btn[disabled]{opacity:.5;cursor:wait}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--panel2);padding:4px;border-radius:10px;border:1px solid var(--line)}
-.seg button{border:0;background:transparent;padding:10px 8px;border-radius:7px;cursor:pointer;font-weight:600;color:var(--mut);transition:background .12s,color .12s}
-.seg button:hover{color:var(--fg);background:color-mix(in srgb,var(--fg) 7%,transparent)}.seg button.on{background:var(--acc);color:var(--acc-fg)}.seg button.on.auto{background:var(--bad);color:#fff}
-.note{color:var(--mut);font-size:13px;margin-top:10px;min-height:38px}.banner{margin-top:10px;padding:8px 12px;border-radius:8px;background:color-mix(in srgb,var(--bad) 16%,transparent);border:1px solid var(--bad);color:var(--bad);font-weight:600;font-size:13px}
+@media(max-width:1100px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
+@media(max-width:900px){.app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;padding:10px;border-right:0;border-bottom:1px solid var(--line)}aside .logo{padding:0 8px}.tag,.sidefoot{display:none}nav{display:flex;gap:4px;flex-wrap:wrap}nav button{width:auto;padding:7px 10px}nav button.on:before{display:none}main{padding:16px}.topbar{padding:12px 16px}}
+.btn{background:transparent;border:1px solid var(--line2);border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:500;transition:background .12s,border-color .12s,transform .05s}
+.btn:hover{border-color:var(--mut);background:var(--side)}.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-fg);font-weight:600}.btn.pri:hover{background:var(--acc2);border-color:var(--acc2)}.btn.dng{border-color:var(--bad);color:var(--bad)}.btn[disabled]{opacity:.5;cursor:wait}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--panel2);padding:4px;border-radius:12px;border:1px solid var(--line)}
+.seg button{border:0;background:transparent;padding:10px 8px;border-radius:9px;cursor:pointer;font-weight:600;color:var(--mut);transition:background .12s,color .12s}
+.seg button:hover{color:var(--fg);background:var(--side)}.seg button.on{background:var(--acc);color:var(--acc-fg)}.seg button.on.auto{background:var(--bad);color:#fff}
+.note{color:var(--mut);font-size:13px;margin-top:10px;min-height:38px}.banner{margin-top:10px;padding:9px 12px;border-radius:10px;background:color-mix(in srgb,var(--bad) 14%,transparent);border:1px solid color-mix(in srgb,var(--bad) 60%,transparent);color:var(--bad);font-weight:600;font-size:13px}
 .sw{display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer;color:var(--mut);user-select:none}.sw:hover{color:var(--fg)}
-.sw i{width:34px;height:20px;border-radius:20px;background:var(--line);position:relative;transition:background .15s;flex:none}.sw i:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.sw i{width:34px;height:20px;border-radius:20px;background:var(--line2);position:relative;transition:background .15s;flex:none}.sw i:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
 .sw.on i{background:var(--acc)}.sw.on i:after{left:16px}
-.ring{display:flex;align-items:center;gap:18px}.ring svg{flex:none}.big{font-size:40px;font-weight:700;line-height:1}.mut{color:var(--mut)}.stat{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}.stat b{display:block;font-size:18px}
-table{width:100%;border-collapse:collapse}th{text-align:left;color:var(--mut);font-weight:500;font-size:12px;padding:6px 10px;border-bottom:1px solid var(--line)}
-td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}tbody tr{transition:background .1s}tbody tr:hover{background:var(--panel2)}tr:last-child td{border-bottom:0}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all}
-.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600;border:1px solid var(--line);white-space:nowrap}
-.chip.critical,.chip.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent);background:color-mix(in srgb,var(--bad) 12%,transparent)}.chip.high{color:#ff8a5c;border-color:#ff8a5c55}
-.chip.medium,.chip.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}.chip.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent);background:color-mix(in srgb,var(--ok) 12%,transparent)}.chip.blue{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 45%,transparent)}
-.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}@media(max-width:700px){.steps{grid-template-columns:1fr}}
-.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel2);transition:border-color .2s,background .2s}.step b{display:block;font-size:12px;color:var(--mut);font-weight:600}.step span{font-size:13px}
-.step.done{border-color:var(--ok)}.step.done b{color:var(--ok)}.step.bad{border-color:var(--bad)}.step.bad b{color:var(--bad)}
+.ring{display:flex;align-items:center;gap:18px}.ring svg{flex:none}.big{font-size:40px;font-weight:700;line-height:1;letter-spacing:-.02em}.mut{color:var(--mut)}.stat{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap}.stat b{display:block;font-size:19px}
+table{width:100%;border-collapse:collapse}th{text-align:left;color:var(--mut);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}tbody tr{transition:background .1s}tbody tr:hover{background:var(--panel2)}tr:last-child td{border-bottom:0}
+.mono{font-family:"Fira Code",ui-monospace,Menlo,monospace;font-size:11.5px;word-break:break-all}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid var(--line2);white-space:nowrap;color:var(--fg2)}
+.chip.critical{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 55%,transparent);background:color-mix(in srgb,var(--crit) 12%,transparent)}.chip.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 55%,transparent);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.chip.high{color:var(--high);border-color:color-mix(in srgb,var(--high) 55%,transparent);background:color-mix(in srgb,var(--high) 10%,transparent)}.chip.medium,.chip.warn{color:var(--med);border-color:color-mix(in srgb,var(--med) 50%,transparent);background:color-mix(in srgb,var(--med) 9%,transparent)}
+.chip.low{color:var(--fg2)}.chip.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent);background:color-mix(in srgb,var(--ok) 11%,transparent)}.chip.blue{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 50%,transparent);background:color-mix(in srgb,var(--blue) 10%,transparent)}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 0}@media(max-width:800px){.steps{grid-template-columns:1fr}}
+.step{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--panel2);transition:border-color .2s}.step b{display:block;font-size:11.5px;color:var(--mut);font-weight:600}.step span{font-size:13px}
+.step.done{border-color:color-mix(in srgb,var(--ok) 70%,transparent)}.step.done b{color:var(--ok)}.step.bad{border-color:var(--bad)}.step.bad b{color:var(--bad)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.empty{color:var(--mut);padding:18px 4px}
-input.search{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:220px}input.search:focus{outline:2px solid color-mix(in srgb,var(--acc) 50%,transparent)}
-.scroll{max-height:420px;overflow:auto;margin:0 -6px;padding:0 6px}a{color:var(--blue)}pre{white-space:pre-wrap;margin:0;font:13px/1.55 ui-monospace,Menlo,monospace}
-@keyframes flash{from{background:color-mix(in srgb,var(--acc) 30%,transparent)}to{background:transparent}}tr.new{animation:flash 2.4s ease-out}
+input.search{background:#111;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:8px 12px;min-width:240px}input.search:focus{outline:2px solid color-mix(in srgb,var(--acc) 45%,transparent)}
+.scroll{max-height:440px;overflow:auto;margin:0 -8px;padding:0 8px}a{color:var(--blue)}pre{white-space:pre-wrap;margin:0;font:12.5px/1.6 "Fira Code",ui-monospace,Menlo,monospace}
+@keyframes flash{from{background:color-mix(in srgb,var(--acc) 22%,transparent)}to{background:transparent}}tr.new{animation:flash 2.4s ease-out}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block}.dot.on{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
 </style></head><body>
-<header><div class="bar">
-  <div class="brand"><img class="logo-w" src="/static/prowler-logo-white.png" alt="Prowler"><img class="logo-b" src="/static/prowler-logo-black.png" alt="Prowler"><span>Warden</span></div>
+<div class="app">
+<aside>
+  <div class="logo"><img class="logo-d" src="/static/prowler-local-server-dark.svg" alt="Prowler"><img class="logo-l" src="/static/prowler-local-server-light.svg" alt="Prowler"></div>
+  <div class="tag">Prowler Warden</div>
+  <nav><button data-view="overview" class="on"><svg viewBox="0 0 24 24"><path d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z"/></svg>Overview</button><button data-view="compliance" class=""><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Compliance</button><button data-view="events" class=""><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Live events</button><button data-view="cost" class=""><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-9"/><path d="M15 6h6v6"/></svg>Cost &amp; signals</button><button data-view="remediation" class=""><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>Remediation</button><button data-view="agent" class=""><svg viewBox="0 0 24 24"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>Agent</button></nav>
+  <div class="sidefoot"><div><i class="dot" id="dot"></i> <b id="watchTxt">watcher off</b></div><div style="margin-top:6px" id="modeFoot">mode</div><div style="margin-top:6px" id="meta"></div></div>
+</aside>
+<div class="content">
+<div class="topbar"><div class="crumb"><span id="crumb">Overview</span><small id="crumbSub">Posture, spend and activity for this account</small></div><div class="sp"></div>
   <select id="acct" title="AWS account"></select><select id="fw" title="Compliance framework" style="max-width:340px"></select>
-  <span class="mut" id="watchChip" title="Live CloudTrail watcher"><i class="dot" id="dot"></i> <span id="watchTxt">watcher off</span></span>
-  <div class="sp"></div><span class="mut" id="meta"></span>
-  <button class="btn" id="refresh" title="Recompute posture now">Refresh</button>
-</div></header>
-<main>
-  <section class="card c4"><h2>Compliance</h2><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>
+  <span id="watchChip" style="display:none"></span><button class="btn" id="refresh" title="Recompute posture now">Refresh</button></div>
+
+<main data-view="overview">
+  <section data-v="overview compliance" class="card c4"><h2>Compliance</h2><div class="ring"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>
     <div><div class="big" id="pct">–</div><div class="mut" id="fwLabel"></div></div></div>
     <div class="stat"><div><b id="sPass" class="ok" style="color:var(--ok)">–</b><span class="mut">pass</span></div><div><b id="sFail" style="color:var(--bad)">–</b><span class="mut">fail</span></div><div><b id="sNo">–</b><span class="mut">no data</span></div></div>
     <div class="note" id="cov" style="min-height:0"></div><div class="row" style="margin-top:8px"><button class="btn" id="scanFw" style="display:none">Scan this framework</button><span class="mut" id="scanSt"></span></div></section>
-  <section class="card c4"><h2>Remediation mode <span class="chip blue" title="Stored in ClickHouse, changes apply instantly">runtime</span></h2>
+  <section data-v="overview remediation" class="card c4"><h2>Remediation mode <span class="chip blue" title="Stored in ClickHouse, changes apply instantly">runtime</span></h2>
     <div class="seg" id="seg"><button data-m="monitor" title="Alert only, change nothing">Monitor</button><button data-m="pr" title="Humans review a pull request">PR review</button><button data-m="auto" class="auto" title="Warden fixes AWS directly">Self-fix</button></div>
     <div class="note" id="modeNote"></div><div id="banner"></div>
     <div class="sw" id="swDry" role="switch"><i></i><span>Dry-run: log what self-fix would change</span></div>
     <div class="sw" id="swWatch" role="switch"><i></i><span>Watch CloudTrail in real time</span></div>
     <div class="sw" id="swPr" role="switch"><i></i><span>Open real pull requests (otherwise prepare a local branch)</span></div></section>
-  <section class="card c4"><h2>Account</h2><div id="acctInfo"></div></section>
+  <section data-v="overview" class="card c4"><h2>Account</h2><div id="acctInfo"></div></section>
 
-  <section class="card c7"><h2>Posture timeline <span class="chip">annotated</span></h2><div id="timeline"></div>
+  <section data-v="overview compliance" class="card c7"><h2>Posture timeline <span class="chip">annotated</span></h2><div id="timeline"></div>
     <div class="row mut" style="font-size:12px;margin-top:6px"><span><i class="dot" style="background:var(--bad)"></i> violation detected</span><span><i class="dot" style="background:var(--ok)"></i> runtime fix</span><span><i class="dot" style="background:var(--blue)"></i> pull request</span><span><i class="dot" style="background:var(--mut)"></i> scan</span><span>dashed = what each class of fix would reach</span></div></section>
-  <section class="card c5"><h2>Fix simulator <span class="chip blue">what if</span></h2><div id="sim"></div></section>
+  <section data-v="overview remediation compliance" class="card c5"><h2>Fix simulator <span class="chip blue">what if</span></h2><div id="sim"></div></section>
 
-  <section class="card c12"><h2>Live demo <span class="chip">throwaway resources tagged warden-demo</span></h2>
+  <section data-v="remediation events" class="card c12"><h2>Live demo <span class="chip">throwaway resources tagged warden-demo</span></h2>
     <div class="row"><button class="btn pri" id="liveStart" title="Creates a throwaway security group and opens port 22 to the internet">1. Open port 22 to the internet</button>
       <button class="btn" id="liveReset" title="Deletes the demo VPC and security group">Reset demo</button><span id="liveSt" class="mut"></span></div>
     <div class="steps" id="steps"></div></section>
 
-  <section class="card c12"><h2><i class="dot on" id="evDot"></i> CloudTrail live stream <span class="chip" id="evCount">–</span>
+  <section data-v="events" class="card c12"><h2><i class="dot on" id="evDot"></i> CloudTrail live stream <span class="chip" id="evCount">–</span>
     <span style="flex:1"></span><div class="sw" id="swWrites" style="margin:0" role="switch"><i></i><span>Only changes (hide reads)</span></div></h2>
     <div class="row" style="margin-bottom:10px"><input class="search" id="evq" placeholder="Filter by event, user, IP, service"><span class="mut" id="evN"></span></div>
     <div class="scroll" id="evs" style="max-height:380px"></div></section>
-  <section class="card c7"><h2>CloudTrail detections <span class="chip blue">verified by Prowler</span></h2><div class="scroll" id="dets"></div></section>
-  <section class="card c5"><h2>Agent actions</h2><div class="scroll" id="acts"></div></section>
+  <section data-v="events" class="card c7"><h2>CloudTrail detections <span class="chip blue">verified by Prowler</span></h2><div class="scroll" id="dets"></div></section>
+  <section data-v="remediation events" class="card c5"><h2>Agent actions</h2><div class="scroll" id="acts"></div></section>
 
-  <section class="card c7"><h2>Failing requirements</h2><div class="row" style="margin-bottom:10px"><input class="search" id="q" placeholder="Filter by id, section or check"><span class="mut" id="qn"></span></div><div class="scroll" id="reqs"></div></section>
-  <section class="card c12"><h2>Cost signals <span class="chip blue">Cost Explorer</span><span class="chip warn" id="costDemoChip" style="display:none">demo overlay on</span><span style="flex:1"></span>
+  <section data-v="compliance" class="card c7"><h2>Failing requirements</h2><div class="row" style="margin-bottom:10px"><input class="search" id="q" placeholder="Filter by id, section or check"><span class="mut" id="qn"></span></div><div class="scroll" id="reqs"></div></section>
+  <section data-v="cost" class="card c12"><h2>Cost signals <span class="chip blue">Cost Explorer</span><span class="chip warn" id="costDemoChip" style="display:none">demo overlay on</span><span style="flex:1"></span>
     <button class="btn" id="costDemo" title="Adds clearly-labelled synthetic spend on top of the real data">Inject demo cost spike</button></h2>
     <div class="mut" style="margin:-4px 0 12px">Spend that jumps far above its 14-day baseline is evidence that a misconfiguration is being used, not only present. Cost lags about 24 hours.</div>
     <div id="costs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px"></div></section>
-  <section class="card c12"><h2>Exploitability signals <span class="chip">cost + CloudTrail</span></h2><div class="scroll" id="sigs"></div></section>
+  <section data-v="cost compliance" class="card c12"><h2>Exploitability signals <span class="chip">cost + CloudTrail</span></h2><div class="scroll" id="sigs"></div></section>
 
-  <section class="card c12"><h2>Agent</h2><div class="row"><button class="btn pri" id="rev">Ask the agent to review this account</button><span class="mut" id="revSt"></span></div><pre id="rep" style="margin-top:12px"></pre></section>
+  <section data-v="agent" class="card c12"><h2>Agent</h2><div class="row"><button class="btn pri" id="rev">Ask the agent to review this account</button><span class="mut" id="revSt"></span></div><pre id="rep" style="margin-top:12px"></pre></section>
 </main>
+</div></div>
 <script>
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cache={};const put=(id,html)=>{if(cache[id]!==html){cache[id]=html;$(id).innerHTML=html}};   // skip identical renders: keeps hover/scroll/focus intact
@@ -121,7 +142,7 @@ async function feeds(){
   put('acts',a.length?`<table><thead><tr><th>Kind</th><th>Status</th><th>What</th><th></th></tr></thead><tbody>${a.map(x=>{const link=/^https?:/.test(x.command||'')?`<a href="${esc(x.command)}" target="_blank" rel="noopener">PR</a>`:'';const rv=x.kind=='self-fix'&&x.status=='fixed-verified'?`<button class="btn" data-revert="${x.id}">Revert</button>`:'';
     return `<tr><td>${chip(x.kind==='self-fix'?'AWS fix':x.kind==='pr'?'Code (PR)':x.kind)}</td><td>${st(x.status)}</td><td>${esc(x.summary).slice(0,90)}<div class="mono mut">${esc(x.check_id)}${x.command&&!link&&x.kind==='pr'?' · branch '+esc(x.command):''}</div></td><td>${link}${rv}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">No actions yet.</div>');
   put('sigs',sg.ranked.length?`<table><thead><tr><th>Score</th><th>Verdict</th><th>Check</th></tr></thead><tbody>${sg.ranked.slice(0,10).map(x=>`<tr title="${esc(x.evidence.join('; '))}"><td><b>${x.score}</b></td><td>${chip(x.verdict,x.verdict=='likely-being-used'?'bad':x.verdict=='signal'?'warn':'')}</td><td class="mono">${esc(x.check_id)}${x.evidence.length?`<div class="mut">${x.evidence.map(esc).join('<br>')}</div>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No data.</div>');
-  $('dot').className='dot'+(w.on?' on':'');$('watchTxt').textContent=w.error?('watcher error'):w.on?(w.last?`watching · last cycle ${w.last.events} new events`:'watching'):'watcher off';
+  $('dot').className='dot'+(w.on?' on':'');$('watchTxt').textContent=w.error?'watcher error':w.on?'CloudTrail watching':'watcher off';
   setSw('swWatch',w.on);events();costs();if(!window._ins||Date.now()-window._ins>15000){window._ins=Date.now();insight()}
   $('liveSt').innerHTML=l.sg?(l.port22_open_to_internet?`<span class="chip bad">${esc(l.sg)} port 22 OPEN to the internet</span>`:`<span class="chip ok">${esc(l.sg)} port 22 closed</span>`):'<span class="chip">no demo resources</span>';
   const e=d[0],hit=e&&e.rule_id=='sg_open_22',fixed=a.find(x=>x.kind=='self-fix'&&/fixed|reverted/.test(x.status)),code=a.find(x=>x.kind=='pr'&&/pr-/.test(x.status));
@@ -172,9 +193,11 @@ async function insight(){const[a,t,m]=await Promise.all([J(`/api/account?account
 function setSw(id,on){$(id).classList.toggle('on',!!on)}
 async function policy(){const p=await J('/api/policy');
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m==p.mode));
-  put('modeNote',NOTE[p.mode]);put('banner',p.mode=='auto'&&!p.dry_run?'<div class="banner">LIVE: Warden will change AWS without asking.</div>':p.mode=='auto'?'<div class="note" style="color:var(--warn)">Dry-run is on: no changes are applied.</div>':'');
+  put('modeNote',NOTE[p.mode]);$('modeFoot').innerHTML='Mode: <b>'+({monitor:'Monitor',pr:'PR review',auto:'Self-fix'})[p.mode]+'</b>'+(p.mode=='auto'&&!p.dry_run?' · live':'');put('banner',p.mode=='auto'&&!p.dry_run?'<div class="banner">LIVE: Warden will change AWS without asking.</div>':p.mode=='auto'?'<div class="note" style="color:var(--warn)">Dry-run is on: no changes are applied.</div>':'');
   setSw('swDry',p.dry_run);setSw('swPr',p.open_pr)}
-document.addEventListener('click',async e=>{const t=e.target.closest('button,.sw,select');if(!t)return;
+const VIEWS={overview:['Overview','Posture, spend and activity for this account'],compliance:['Compliance','Framework requirements, coverage and what fixing them is worth'],events:['Live events','CloudTrail in real time, with Prowler-verified detections'],cost:['Cost & signals','Spend anomalies as evidence a misconfiguration is being used'],remediation:['Remediation','Choose self-fix or PR review, simulate fixes and run the live demo'],agent:['Agent','Ask the Claude agent to review the account']};
+function view(v){document.querySelector('main').dataset.view=v;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.view==v));$('crumb').textContent=VIEWS[v][0];$('crumbSub').textContent=VIEWS[v][1];try{history.replaceState(null,'','#'+v)}catch(e){}}
+document.addEventListener('click',async e=>{const nv=e.target.closest('nav button');if(nv){view(nv.dataset.view);return}const t=e.target.closest('button,.sw,select');if(!t)return;
   if(t.dataset.m){await post('/api/policy',{key:'mode',value:t.dataset.m});policy()}
   else if(t.id=='swDry'){await post('/api/policy',{key:'dry_run',value:!t.classList.contains('on')});policy()}
   else if(t.id=='swPr'){await post('/api/policy',{key:'open_pr',value:!t.classList.contains('on')});policy()}
@@ -190,7 +213,7 @@ document.addEventListener('click',async e=>{const t=e.target.closest('button,.sw
   else if(t.id=='rev'){t.disabled=true;$('revSt').textContent='Agent is working…';$('rep').textContent='';const r=await post('/api/review',{account:cur.a,framework:cur.f});
     $('rep').textContent=r.error?('Error: '+r.error):`[tools: ${r.tools.join(' → ')}]\n\n${r.report}`;$('revSt').textContent='';t.disabled=false}});
 $('q').oninput=drawReqs;$('evq').oninput=()=>{cache.evs=null;events()};$('acct').onchange=async()=>{await loadFw();load()};$('fw').onchange=()=>{cache.dets=null;cache.sigs=null;load();feeds()};
-(async()=>{const a=(await J('/api/accounts')).data;const ids=[...new Set(a.map(x=>x.account_id))].sort((x,y)=>(y=='552455647653')-(x=='552455647653'));
+(async()=>{const h=location.hash.slice(1);if(VIEWS[h])view(h);const a=(await J('/api/accounts')).data;const ids=[...new Set(a.map(x=>x.account_id))].sort((x,y)=>(y=='552455647653')-(x=='552455647653'));
   $('acct').innerHTML=ids.map(x=>`<option value="${x}">${x}</option>`).join('');if(!ids.length)return;
   await loadFw();await load();await policy();await feeds();
   setInterval(()=>{policy();feeds()},4000);setInterval(load,60000)})();

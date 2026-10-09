@@ -84,6 +84,25 @@ REMEDIATORS = {
 def _record(account, framework, kind, check, resource, summary, command, status):
     db.client().insert("actions", [[account, framework, kind, check, resource, summary, command, status]],
                        column_names=["account_id", "framework", "kind", "check_id", "resource_uid", "summary", "command", "status"])
+    _notify(account, framework, kind, check, resource, summary, command, status)
+
+
+_NOTIFY_STATUS = {"fixed-verified", "fix-applied-still-failing", "failed", "pr-opened", "pr-ready", "dry-run"}
+
+
+def _notify(account, framework, kind, check, resource, summary, command, status):
+    """Best-effort Slack alert via Guild.ai; never affects remediation."""
+    try:
+        if kind not in ("self-fix", "pr") or status not in _NOTIFY_STATUS:
+            return
+        from . import notify
+        pol = policy.get()
+        pr_url = command if kind == "pr" and str(command).startswith("http") else None
+        notify.send_action({"action_kind": kind, "severity": "", "check_id": check, "resource": resource,
+                            "account": account, "summary": summary, "status": status, "pr_url": pr_url,
+                            "mode": pol.get("mode", ""), "framework": framework})
+    except Exception:
+        pass
 
 
 def _code_track(pol, account, framework, chk, res, region, profile, note):
